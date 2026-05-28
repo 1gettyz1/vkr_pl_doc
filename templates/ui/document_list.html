@@ -1,0 +1,144 @@
+{% extends "ui/base.html" %}
+{% load ui_labels %}
+{% block content %}
+<h2>Список документов</h2>
+{% if current_enterprise_user.role_id.role_name == "OPERATOR" %}
+<p class="text-muted">Режим оператора: сначала выберите экземпляр БП из списка ниже, затем откройте его документы.</p>
+{% endif %}
+<div style="margin:8px 0 14px 0; font-size:13px;">
+  Обозначения статусов:
+  <span class="status-pill status-draft">Черновик</span>
+  <span class="status-pill status-filled">Заполнен</span>
+  <span class="status-pill status-generated">Сформирован</span>
+  <span class="status-pill status-archived">Архивирован</span>
+</div>
+{% if current_enterprise_user.role_id.role_name == "OPERATOR" and not selected_instance %}
+<div class="card" style="margin-bottom:16px;">
+  <h3 style="margin-top:0;">Мои БП</h3>
+  <table class="zebra">
+    <thead>
+      <tr><th>Название экземпляра</th><th>Шаблон БП</th><th>Создан</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for inst in instance_rows %}
+      <tr>
+        <td>{{ inst.instance_name|default:"—" }}</td>
+        <td>{{ inst.business_process_template.name }}</td>
+        <td>{{ inst.created_at }}</td>
+        <td><a href="{% url 'ui-documents' %}?bpi_id={{ inst.bpi_id }}" class="btn btn-edit btn-inline btn-pill">Открыть документы</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4">Экземпляров БП пока нет</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if current_enterprise_user.role_id.role_name == "OPERATOR" and selected_instance %}
+<div class="card" style="margin-bottom:16px;">
+  <a class="back-link" href="{% url 'ui-documents' %}">← К перечню БП</a>
+  <div><strong>Название экземпляра:</strong> {{ selected_instance.instance_name|default:"—" }}</div>
+  <div><strong>Шаблон БП:</strong> {{ selected_instance.business_process_template.name }}</div>
+  <div class="text-muted"><strong>Создан:</strong> {{ selected_instance.created_at }}</div>
+</div>
+{% endif %}
+
+{% if current_enterprise_user.role_id.role_name == "OPERATOR" and not selected_instance %}
+<form method="get" class="card" style="margin-bottom:16px; display:grid; grid-template-columns: 1fr 320px auto; gap:10px; align-items:end;">
+    <div style="min-width:0;">
+      <label>Поиск по названию экземпляра</label>
+      <input name="q" value="{{ request.GET.q }}" />
+    </div>
+    <div>
+      <label>Шаблон БП</label>
+      <select name="bpt_id">
+        <option value="">Все шаблоны</option>
+        {% for row in operator_templates %}
+          <option value="{{ row.business_process_template_id }}" {% if bpt_id == row.business_process_template_id|stringformat:"s" %}selected{% endif %}>
+            {{ row.business_process_template__name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-save btn-pill">Найти</button>
+</form>
+{% elif current_enterprise_user.role_id.role_name != "OPERATOR" %}
+<form method="get" class="card" style="margin-bottom:16px; display:grid; grid-template-columns: 1.4fr 1fr 180px auto; gap:10px; align-items:end;">
+    <div style="min-width:0;">
+      <label>Поиск по названию</label>
+      <input name="q" value="{{ request.GET.q }}" />
+    </div>
+    {% if current_enterprise_user.role_id.role_name != "OPERATOR" %}
+      <div>
+        <label>Бизнес-процесс</label>
+        <select name="process_id">
+          <option value="">Все</option>
+          {% for p in processes %}
+            <option value="{{ p.process_id }}" {% if request.GET.process_id == p.process_id|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    {% else %}
+      <div></div>
+    {% endif %}
+    <div>
+      <label>Статус</label>
+      <select name="status">
+        <option value="">Все</option>
+        <option value="draft" {% if request.GET.status == "draft" %}selected{% endif %}>Черновик</option>
+        <option value="filled" {% if request.GET.status == "filled" %}selected{% endif %}>Заполнен</option>
+        <option value="generated" {% if request.GET.status == "generated" %}selected{% endif %}>Сформирован</option>
+        <option value="archived" {% if request.GET.status == "archived" %}selected{% endif %}>Архивирован</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-save btn-pill">Найти</button>
+</form>
+{% endif %}
+{% if current_enterprise_user.role_id.role_name == "OPERATOR" and not selected_instance %}
+<div class="card">
+  <p class="text-muted" style="margin:0;">Выберите экземпляр БП в таблице выше, чтобы перейти к его документам.</p>
+</div>
+{% else %}
+<div class="card" style="padding:0; overflow:auto;">
+<table class="zebra">
+    <thead>
+    <tr><th>Тип</th><th>БП (шаблон)</th><th>Статус</th><th>Пользователь</th><th>Создан</th><th>Действия</th></tr>
+    </thead>
+    <tbody>
+    {% for d in documents %}
+    <tr>
+        <td>{{ d.document_type_id.name }}</td>
+        <td>
+          {% if d.bpm_document_slot %}
+            {{ d.bpm_document_slot.business_process_instance.business_process_template.name }}
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
+        </td>
+        <td>
+          <span class="status-pill status-{{ d.status }}">{{ d.status|status_ru }}</span>
+        </td>
+        <td>{{ d.user_id.full_name }}</td>
+        <td>{{ d.created_at }}</td>
+        <td>
+          <a href="/ui/documents/{{ d.document_id }}/preview/" class="btn btn-edit btn-inline btn-pill">Просмотр</a>
+          <a href="/ui/documents/{{ d.document_id }}/requisites/" class="btn btn-save btn-inline btn-pill">Редактировать</a>
+          <form method="post" style="display:inline;">{% csrf_token %}
+            <input type="hidden" name="action" value="delete" />
+            <input type="hidden" name="document_id" value="{{ d.document_id }}" />
+            <button class="btn btn-delete btn-inline btn-pill" type="submit">Удалить</button>
+          </form>
+        </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6">Документов пока нет</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}
+{% block page_help %}
+Здесь оператор и администратор просматривают документы, фильтруют по статусу и открывают предпросмотр. Для документов из БП в таблице указан шаблон бизнес-процесса.
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<h2>Этапы бизнес-процессов</h2>
+<h3>{% if edit_step %}Редактирование этапа{% else %}Создать этап{% endif %}</h3>
+<form method="post">{% csrf_token %}
+  <input type="hidden" name="action" value="{% if edit_step %}update{% else %}create{% endif %}" />
+  {% if edit_step %}<input type="hidden" name="step_id" value="{{ edit_step.step_id }}" />{% endif %}
+  <label>Процесс</label>
+  <select name="process_id">
+    {% for p in processes %}
+      <option value="{{ p.process_id }}" {% if edit_step.process_id_id == p.process_id %}selected{% endif %}>{{ p.name }}</option>
+    {% endfor %}
+  </select>
+  <label>Название этапа</label><input name="name" value="{{ edit_step.name }}" required />
+  <label>Порядок</label><input type="number" name="step_order" value="{{ edit_step.step_order|default:'1' }}" required />
+  <button type="submit">{% if edit_step %}Сохранить{% else %}Создать{% endif %}</button>
+</form>
+<table>
+  <thead><tr><th>Процесс</th><th>Этап</th><th>Порядок</th><th></th><th></th></tr></thead>
+  <tbody>
+  {% for s in steps %}
+    <tr>
+      <td>{{ s.process_id.name }}</td>
+      <td>{{ s.name }}</td>
+      <td>{{ s.step_order }}</td>
+      <td><a href="/ui/process-steps/?edit_id={{ s.step_id }}">Редактировать</a></td>
+      <td>
+        <form method="post">{% csrf_token %}
+          <input type="hidden" name="action" value="delete" />
+          <input type="hidden" name="step_id" value="{{ s.step_id }}" />
+          <button type="submit">Удалить</button>
+        </form>
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="5">Этапы отсутствуют</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+{% block page_help %}
+Здесь отображаются этапы процессов и их порядок выполнения.
+{% endblock %}

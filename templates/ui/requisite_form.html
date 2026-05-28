@@ -1,0 +1,17 @@
+{% extends "ui/base.html" %}
+{% load document_extras %}
+{% block content %}
+<h2>Реквизиты документа #{{ document.document_id }}</h2>
+<form method="post">{% csrf_token %}
+{% if has_table and table_columns_json != "[]" %}
+{% include "ui/fragments/table_rows_widget.html" %}
+{% endif %}
+    {% for r in requisites %}
+        {% if not r.is_table_column %}
+        <label>{{ r.name }} {% if r.is_required %}*{% endif %} ({{ r.data_type }})</label>
+        <input name="req_{{ r.requisite_id }}" value="{{ current_values|get_item:r.requisite_id }}" />
+        {% endif %}
+    {% endfor %}
+    <button type="submit">Сохранить значения</button>
+</form>
+{% endblock %}

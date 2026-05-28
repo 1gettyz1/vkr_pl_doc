@@ -1,0 +1,33 @@
+[
+  {"model": "roles.roles", "pk": 1, "fields": {"role_name": "ADMIN", "description": "Администрирование"}},
+  {"model": "roles.roles", "pk": 2, "fields": {"role_name": "SPECIALIST", "description": "Настройка структуры"}},
+  {"model": "roles.roles", "pk": 3, "fields": {"role_name": "OPERATOR", "description": "Формирование документов"}},
+
+  {"model": "users.users", "pk": 1, "fields": {"login": "admin", "full_name": "Администратор", "password": "admin", "role_id": 1}},
+  {"model": "users.users", "pk": 2, "fields": {"login": "specialist", "full_name": "Специалист", "password": "specialist", "role_id": 2}},
+  {"model": "users.users", "pk": 3, "fields": {"login": "operator", "full_name": "Оператор", "password": "operator", "role_id": 3}},
+
+  {"model": "templates_cfg.productionobjects", "pk": 1, "fields": {"object_type": "Изделие", "name": "Редуктор Р-125"}},
+  {"model": "processes.processes", "pk": 1, "fields": {"name": "Сопровождение производственной документации", "description": "Дипломный сценарий"}},
+  {"model": "processes.processsteps", "pk": 1, "fields": {"name": "Формирование исходного документа", "step_order": 1, "process_id": 1}},
+  {"model": "processes.processsteps", "pk": 2, "fields": {"name": "Формирование связанного документа", "step_order": 2, "process_id": 1}},
+
+  {"model": "templates_cfg.documenttypes", "pk": 1, "fields": {"name": "Приказ", "description": "Исходный документ"}},
+  {"model": "templates_cfg.documenttypes", "pk": 2, "fields": {"name": "Служебная записка", "description": "Связанный документ"}},
+
+  {"model": "requisites.requisites", "pk": 1, "fields": {"name": "Номер приказа", "data_type": "text", "is_required": true, "field_kind": "variable", "document_type_id": 1}},
+  {"model": "requisites.requisites", "pk": 2, "fields": {"name": "Год", "data_type": "number", "is_required": true, "field_kind": "variable", "document_type_id": 1}},
+  {"model": "requisites.requisites", "pk": 3, "fields": {"name": "Ответственный", "data_type": "text", "is_required": true, "field_kind": "variable", "document_type_id": 1}},
+  {"model": "requisites.requisites", "pk": 4, "fields": {"name": "Подразделение", "data_type": "text", "is_required": true, "field_kind": "variable", "document_type_id": 1}},
+
+  {"model": "requisites.requisites", "pk": 5, "fields": {"name": "Год", "data_type": "number", "is_required": true, "field_kind": "constant", "document_type_id": 2}},
+  {"model": "requisites.requisites", "pk": 6, "fields": {"name": "Ответственный", "data_type": "text", "is_required": true, "field_kind": "constant", "document_type_id": 2}},
+  {"model": "requisites.requisites", "pk": 7, "fields": {"name": "Подразделение", "data_type": "text", "is_required": true, "field_kind": "constant", "document_type_id": 2}},
+  {"model": "requisites.requisites", "pk": 8, "fields": {"name": "Тема записки", "data_type": "text", "is_required": true, "field_kind": "variable", "document_type_id": 2}},
+  {"model": "requisites.requisites", "pk": 9, "fields": {"name": "Содержание", "data_type": "text", "is_required": true, "field_kind": "variable", "document_type_id": 2}},
+  {"model": "requisites.requisites", "pk": 10, "fields": {"name": "Обоснование", "data_type": "text", "is_required": true, "field_kind": "variable", "document_type_id": 2}},
+
+  {"model": "requisites.requisitelinks", "pk": 1, "fields": {"source_requisite_id": 2, "target_requisite_id": 5, "inheritance_rule": "copy_latest_value"}},
+  {"model": "requisites.requisitelinks", "pk": 2, "fields": {"source_requisite_id": 3, "target_requisite_id": 6, "inheritance_rule": "copy_latest_value"}},
+  {"model": "requisites.requisitelinks", "pk": 3, "fields": {"source_requisite_id": 4, "target_requisite_id": 7, "inheritance_rule": "copy_latest_value"}}
+]

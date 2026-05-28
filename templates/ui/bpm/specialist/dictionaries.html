@@ -1,0 +1,82 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<a class="back-link" href="{% url 'ui-bpm-process-templates' %}">← Шаблоны БП</a>
+<h2>Справочники</h2>
+
+<div class="card" style="margin-bottom:16px;">
+  <h3>{% if edit_dict %}Переименовать справочник{% else %}Новый справочник{% endif %}</h3>
+  <form method="post" class="form-grid-2">{% csrf_token %}
+    {% if edit_dict %}
+      <input type="hidden" name="action" value="update_dict" />
+      <input type="hidden" name="dictionary_id" value="{{ edit_dict.dictionary_id }}" />
+    {% else %}
+      <input type="hidden" name="action" value="create_dict" />
+    {% endif %}
+    <div><label>Название</label><input name="name" value="{{ edit_dict.name }}" required /></div>
+    <div style="align-self:end;"><button type="submit" class="btn btn-save">{% if edit_dict %}Сохранить{% else %}Создать{% endif %}</button></div>
+  </form>
+</div>
+
+{% if edit_record %}
+<div class="card alert-info">
+  <h3>Редактирование записи</h3>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="update_record" />
+    <input type="hidden" name="record_id" value="{{ edit_record.record_id }}" />
+    <label>Ключ поиска</label><input name="lookup_key" value="{{ edit_record.lookup_key }}" />
+    <label>JSON</label><textarea name="payload_json" rows="5">{{ edit_record.payload_json }}</textarea>
+    <button type="submit" class="btn btn-save">Сохранить</button>
+    <a href="{% url 'ui-bpm-dictionaries' %}" class="btn btn-edit btn-inline">Отмена</a>
+  </form>
+</div>
+{% endif %}
+
+{% for d in dictionaries %}
+<div class="card" style="margin-bottom:14px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+    <h3>{{ d.name }}</h3>
+    <div>
+      <a href="{% url 'ui-bpm-dictionaries' %}?edit_id={{ d.dictionary_id }}" class="btn btn-edit btn-inline">Переименовать</a>
+      <form method="post" style="display:inline;" onsubmit="return confirm('Удалить справочник?');">{% csrf_token %}
+        <input type="hidden" name="action" value="delete_dict" />
+        <input type="hidden" name="dictionary_id" value="{{ d.dictionary_id }}" />
+        <button type="submit" class="btn btn-delete btn-inline">Удалить</button>
+      </form>
+    </div>
+  </div>
+  <table class="zebra">
+    <thead><tr><th>Ключ</th><th>Данные</th><th></th></tr></thead>
+    <tbody>
+    {% for rec in d.records.all %}
+      <tr>
+        <td>{{ rec.lookup_key }}</td>
+        <td><code style="font-size:11px;word-break:break-all;">{{ rec.payload_json }}</code></td>
+        <td>
+          <a href="{% url 'ui-bpm-dictionaries' %}?edit_record_id={{ rec.record_id }}" class="btn btn-edit btn-inline">Изменить</a>
+          <form method="post" style="display:inline;">{% csrf_token %}
+            <input type="hidden" name="action" value="delete_record" />
+            <input type="hidden" name="record_id" value="{{ rec.record_id }}" />
+            <button type="submit" class="btn btn-delete btn-inline">Удалить</button>
+          </form>
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="3">Нет записей</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% if not edit_record %}
+  <h4>Добавить запись</h4>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="create_record" />
+    <input type="hidden" name="dictionary_id" value="{{ d.dictionary_id }}" />
+    <label>Ключ поиска</label><input name="lookup_key" placeholder="Отдел технической подготовки" />
+    <label>JSON</label><textarea name="payload_json" rows="3">{"signer_name":"","signer_position":"","phone":""}</textarea>
+    <button type="submit" class="btn btn-save">Добавить</button>
+  </form>
+  {% endif %}
+</div>
+{% empty %}
+<p class="text-muted">Справочников нет — создайте выше.</p>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<a class="back-link" href="/">← На дашборд</a>
+<h2>Стили интерфейса (системная страница)</h2>
+<p class="text-muted">Наглядный каталог компонентов из <code>base.html</code>: цвета CSS-переменных, кнопки, карточки, алерты, статусы и поля. Не влияет на данные.</p>
+
+<section class="card" style="margin-bottom:18px;">
+  <h3 style="margin-top:0;">CSS-переменные <code>:root</code></h3>
+  <p class="hint">Фон страницы сейчас: <code>--bg</code>. Плашки ниже — фон переменной.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;">
+    <span style="padding:10px 14px;border-radius:10px;background:var(--save);color:#fff;font-weight:600;">--save</span>
+    <span style="padding:10px 14px;border-radius:10px;background:var(--edit);color:#fff;font-weight:600;">--edit</span>
+    <span style="padding:10px 14px;border-radius:10px;background:var(--delete);color:#fff;font-weight:600;">--delete</span>
+    <span style="padding:10px 14px;border-radius:10px;background:var(--back);color:#fff;font-weight:600;">--back</span>
+    <span style="padding:10px 14px;border-radius:10px;background:var(--info);color:#fff;font-weight:600;">--info</span>
+    <span style="padding:10px 14px;border-radius:10px;background:var(--ok);color:#fff;font-weight:600;">--ok</span>
+    <span style="padding:10px 14px;border-radius:10px;background:var(--warn);color:#fff;font-weight:600;">--warn</span>
+    <span style="padding:10px 14px;border-radius:10px;background:var(--err);color:#fff;font-weight:600;">--err</span>
+    <span style="padding:10px 14px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--text);">--card / --text</span>
+    <span style="padding:10px 14px;border-radius:10px;background:var(--sidebar-bg);color:var(--sidebar-text);">sidebar</span>
+    <span style="padding:10px 14px;border-radius:10px;background:#e5e7eb;color:var(--muted);">--muted</span>
+  </div>
+</section>
+
+<section class="card" style="margin-bottom:18px;">
+  <h3 style="margin-top:0;">Кнопки <code>.btn</code></h3>
+  <p class="hint">Обычные и с <code>.btn-inline</code> + <code>.btn-pill</code> (как в таблицах).</p>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0;">
+    <button type="button" class="btn btn-save">Сохранить</button>
+    <button type="button" class="btn btn-edit">Изменить</button>
+    <button type="button" class="btn btn-delete">Удалить</button>
+    <button type="button" class="btn btn-back">Назад</button>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+    <span class="btn btn-save btn-pill">Ссылка-save</span>
+    <span class="btn btn-edit btn-pill">Ссылка-edit</span>
+    <button type="button" class="btn btn-delete btn-inline btn-pill">Удалить inline</button>
+    <button type="button" class="btn btn-save btn-inline btn-pill">Сохранить inline</button>
+  </div>
+</section>
+
+<section class="card" style="margin-bottom:18px;">
+  <h3 style="margin-top:0;">Ссылка «назад» <code>.back-link</code></h3>
+  <p><a class="back-link" href="#">Пример back-link</a></p>
+</section>
+
+<section class="card" style="margin-bottom:18px;">
+  <h3 style="margin-top:0;">Карточки <code>.card</code> и сетка <code>.cards-row</code></h3>
+  <div class="cards-row" style="margin-top:12px;">
+    <div class="card hover"><strong>hover</strong><p class="text-muted">Тень при наведении</p></div>
+    <div class="card"><strong>Обычная</strong><p class="text-muted">Без hover-класса</p></div>
+  </div>
+</section>
+
+<section class="card" style="margin-bottom:18px;">
+  <h3 style="margin-top:0;">Алерты <code>.alert</code></h3>
+  <div class="alert alert-success">alert-success — успех</div>
+  <div class="alert alert-warn">alert-warn — предупреждение</div>
+  <div class="alert alert-error">alert-error — ошибка</div>
+  <div class="alert alert-info">alert-info — информация</div>
+</section>
+
+<section class="card" style="margin-bottom:18px;">
+  <h3 style="margin-top:0;">Бейджи <code>.badge</code> (БП и проч.)</h3>
+  <p>
+    <span class="badge badge-info">badge-info</span>
+    <span class="badge badge-draft">badge-draft</span>
+    <span class="badge badge-in_progress">badge-in_progress</span>
+    <span class="badge badge-completed">badge-completed</span>
+  </p>
+</section>
+
+<section class="card" style="margin-bottom:18px;">
+  <h3 style="margin-top:0;">Статусы документов <code>.status-pill</code></h3>
+  <p>
+    <span class="status-pill status-draft">Черновик</span>
+    <span class="status-pill status-filled">Заполнен</span>
+    <span class="status-pill status-generated">Сформирован</span>
+    <span class="status-pill status-archived">Архив</span>
+  </p>
+</section>
+
+<section class="card" style="margin-bottom:18px;">
+  <h3 style="margin-top:0;">Плейсхолдеры в предпросмотре <code>.ph</code></h3>
+  <p>
+    <span class="ph constant">Постоянный .ph.constant</span>
+    &nbsp;
+    <span class="ph variable">Переменный .ph.variable</span>
+  </p>
+</section>
+
+<section class="card" style="margin-bottom:18px;">
+  <h3 style="margin-top:0;">Строки полей мастера <code>.field-row</code></h3>
+  <div class="field-row field-constant">
+    <label><strong>Поле constant</strong></label>
+    <input type="text" class="readonly-input" value="Только чтение" readonly />
+    <div class="hint">Подсказка под полем (.hint)</div>
+  </div>
+  <div class="field-row field-variable">
+    <label><strong>Поле variable</strong></label>
+    <input type="text" value="Редактируемое" />
+  </div>
+</section>
+
+<section class="card" style="margin-bottom:18px;">
+  <h3 style="margin-top:0;">Текст <code>.text-muted</code> и сетки форм</h3>
+  <p class="text-muted">Вторичный текст (.text-muted)</p>
+  <div class="form-grid-2" style="max-width:640px;">
+    <div class="full-row"><label>Пример label</label><input type="text" placeholder="input в form-grid-2" /></div>
+    <div style="align-self:end;"><button type="button" class="btn btn-save btn-pill">В сетке</button></div>
+  </div>
+</section>
+
+<section class="card">
+  <h3 style="margin-top:0;">Таблица <code>table.zebra</code></h3>
+  <table class="zebra">
+    <thead><tr><th>Колонка A</th><th>Колонка B</th></tr></thead>
+    <tbody>
+      <tr><td>Строка 1</td><td>Данные</td></tr>
+      <tr><td>Строка 2</td><td><span class="status-pill status-filled">статус</span></td></tr>
+    </tbody>
+  </table>
+</section>
+{% endblock %}
+{% block page_help %}
+Путь: <code>/ui/system/styleguide/</code> — только для авторизованных пользователей.
+{% endblock %}

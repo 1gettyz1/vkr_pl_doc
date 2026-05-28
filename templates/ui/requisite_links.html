@@ -1,0 +1,90 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<h2>Настройка связей реквизитов</h2>
+<form method="post">{% csrf_token %}
+  <input type="hidden" name="action" value="{% if edit_link %}update{% else %}create{% endif %}" />
+  {% if edit_link %}<input type="hidden" name="req_link_id" value="{{ edit_link.req_link_id }}" />{% endif %}
+  <label>Исходный тип документа</label>
+  <select id="source-type"></select>
+  <label>Исходный реквизит</label>
+  <select name="source_requisite_id" id="source-req"></select>
+  <label>Целевой тип документа</label>
+  <select id="target-type"></select>
+  <label>Целевой реквизит</label>
+  <select name="target_requisite_id" id="target-req"></select>
+  <label>Правило наследования</label>
+  <select name="inheritance_rule">
+    <option value="copy_from_same_process_and_object">Автоперенос из связанного предыдущего документа</option>
+  </select>
+  <button type="submit">{% if edit_link %}Сохранить изменения{% else %}Создать связь{% endif %}</button>
+</form>
+
+<h3>Текущие связи</h3>
+<table>
+  <thead><tr><th>Источник</th><th>Цель</th><th>Правило</th><th>Действия</th></tr></thead>
+  <tbody>
+  {% for l in links %}
+    <tr>
+      <td>{{ l.source_requisite_id.document_type_id.name }}.{{ l.source_requisite_id.name }}</td>
+      <td>{{ l.target_requisite_id.document_type_id.name }}.{{ l.target_requisite_id.name }}</td>
+      <td>
+        {% if l.inheritance_rule == "copy_latest_value" %}Взять последнее значение
+        {% elif l.inheritance_rule == "copy_from_same_process" %}Взять из документа того же процесса
+        {% elif l.inheritance_rule == "copy_from_same_object" %}Взять из документа того же объекта
+        {% elif l.inheritance_rule == "copy_from_same_process_and_object" %}Взять из того же процесса и объекта
+        {% elif l.inheritance_rule == "copy_if_empty" %}Копировать если пусто
+        {% else %}Всегда перезаписывать{% endif %}
+      </td>
+      <td>
+        <a href="/ui/requisite-links/?edit_id={{ l.req_link_id }}"><button type="button" class="btn-inline">Редактировать</button></a>
+        <form method="post" style="display:inline;">{% csrf_token %}
+          <input type="hidden" name="action" value="delete" />
+          <input type="hidden" name="req_link_id" value="{{ l.req_link_id }}" />
+          <button class="btn-inline" type="submit">Удалить</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<script>
+const requisites = [
+{% for r in requisites %}
+{id: {{ r.requisite_id }}, typeId: {{ r.document_type_id.document_type_id }}, text: "{{ r.name|escapejs }}"},
+{% endfor %}
+];
+const types = [
+{% for dt in document_types %}
+{id: {{ dt.document_type_id }}, text: "{{ dt.name|escapejs }}"},
+{% endfor %}
+];
+const sourceType = document.getElementById("source-type");
+const targetType = document.getElementById("target-type");
+const sourceReq = document.getElementById("source-req");
+const targetReq = document.getElementById("target-req");
+types.forEach(t => {
+  sourceType.add(new Option(t.text, t.id));
+  targetType.add(new Option(t.text, t.id));
+});
+function fillReq(selectType, reqSelect) {
+  const typeId = parseInt(selectType.value);
+  reqSelect.innerHTML = "";
+  requisites.filter(r => r.typeId === typeId).forEach(r => reqSelect.add(new Option(r.text, r.id)));
+}
+sourceType.addEventListener("change", () => fillReq(sourceType, sourceReq));
+targetType.addEventListener("change", () => fillReq(targetType, targetReq));
+if (types.length) {
+  sourceType.value = "{{ edit_link.source_requisite_id.document_type_id.document_type_id|default:'' }}" || types[0].id;
+  targetType.value = "{{ edit_link.target_requisite_id.document_type_id.document_type_id|default:'' }}" || types[0].id;
+  fillReq(sourceType, sourceReq);
+  fillReq(targetType, targetReq);
+  const sourceReqId = "{{ edit_link.source_requisite_id_id|default:'' }}";
+  const targetReqId = "{{ target_requisite_id_param|default:'' }}" || "{{ edit_link.target_requisite_id_id|default:'' }}";
+  if (sourceReqId) sourceReq.value = sourceReqId;
+  if (targetReqId) targetReq.value = targetReqId;
+}
+</script>
+{% endblock %}
+{% block page_help %}
+Здесь специалист связывает поля разных документов. Благодаря этому оператору не нужно повторно вводить постоянные реквизиты.
+{% endblock %}

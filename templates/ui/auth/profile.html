@@ -1,0 +1,17 @@
+{% extends "ui/base.html" %}
+{% load ui_labels %}
+{% block content %}
+<h2>Профиль пользователя</h2>
+<p><b>Логин:</b> {{ profile_user.login }}</p>
+<p><b>ФИО:</b> {{ profile_user.full_name }}</p>
+<p><b>Роль:</b> {{ profile_user.role_id.role_name|role_ru }}</p>
+<h3>Доступные действия</h3>
+<ul>
+{% for action in actions %}
+  <li>{{ action }}</li>
+{% endfor %}
+</ul>
+{% endblock %}
+{% block page_help %}
+Профиль содержит ваши учетные данные и список действий, доступных в соответствии с ролью.
+{% endblock %}

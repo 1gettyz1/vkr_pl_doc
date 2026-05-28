@@ -1,0 +1,72 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<a class="back-link" href="{% url 'ui-bpm-operator-hub' %}">← К списку процессов</a>
+<h2>Запуск: {{ bpt.name }}</h2>
+<p class="text-muted">Если к шаблону привязаны справочники — выберите по записи в каждом. Если справочников нет, все поля заполняются на шагах БП; для документов используется служебная привязка объекта.</p>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<form method="post" id="start-bp-form">{% csrf_token %}
+  <div class="card" style="margin-bottom:14px;">
+    <label><strong>Название экземпляра БП</strong></label>
+    <input type="text" name="instance_name" value="{{ instance_name|default:'' }}" placeholder="Например: Договор май 2026 / Северный участок" maxlength="255" />
+    <div class="hint">Опционально, но рекомендуется: это название будет видно в списке БП при просмотре документов.</div>
+  </div>
+  {% for d in required_dicts %}
+  <div class="card dict-block" style="margin-bottom:14px;" data-dict-id="{{ d.dictionary_id }}">
+    <label><strong>{{ d.name }}</strong></label>
+    <p class="hint">Начните вводить ключ или любое значение из строки — список сузится.</p>
+    <input type="search"
+           class="dict-search-input"
+           data-dict-id="{{ d.dictionary_id }}"
+           placeholder="Поиск…"
+           autocomplete="off"
+           style="margin-bottom:8px;" />
+    <select name="selection_dict_{{ d.dictionary_id }}" class="dict-select-full" required size="6" style="min-height:140px;">
+      <option value="">— выберите запись —</option>
+    </select>
+    <div class="dict-hint text-muted" style="font-size:12px;margin-top:6px;"></div>
+  </div>
+  {% empty %}
+  <div class="alert alert-info">Справочники при запуске не требуются — нажмите «Запустить», затем заполните поля на шагах БП.</div>
+  {% endfor %}
+
+  <button type="submit" class="btn btn-save btn-pill">Запустить экземпляр БП</button>
+</form>
+
+<script>
+(function(){
+  function loadOptions(dictId, q, selectEl, hintEl) {
+    var url = '/ui/bpm/api/dictionaries/' + dictId + '/records/search/';
+    fetch(url + '?q=' + encodeURIComponent(q || ''))
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        var cur = selectEl.value;
+        selectEl.innerHTML = '<option value="">— выберите запись —</option>';
+        (data.results || []).forEach(function(item){
+          var o = document.createElement('option');
+          o.value = item.id;
+          o.textContent = item.label;
+          selectEl.appendChild(o);
+        });
+        if (cur) selectEl.value = cur;
+        if (hintEl) hintEl.textContent = (data.results || []).length ? '' : 'Ничего не найдено — измените запрос.';
+      });
+  }
+  document.querySelectorAll('.dict-block').forEach(function(block){
+    var id = block.getAttribute('data-dict-id');
+    var sel = block.querySelector('.dict-select-full');
+    var search = block.querySelector('.dict-search-input');
+    var hint = block.querySelector('.dict-hint');
+    loadOptions(id, '', sel, hint);
+    var tmo;
+    search.addEventListener('input', function(){
+      clearTimeout(tmo);
+      tmo = setTimeout(function(){ loadOptions(id, search.value.trim(), sel, hint); }, 250);
+    });
+  });
+})();
+</script>
+{% endblock %}

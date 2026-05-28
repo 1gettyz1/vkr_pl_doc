@@ -1,0 +1,41 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<a class="back-link" href="/">← На дашборд</a>
+<h2>Шаблоны бизнес-процессов</h2>
+<p class="text-muted">Создайте шаблон (название и описание). Далее в карточке шаблона укажите этапы — <strong>типы документов</strong> в нужном порядке, загрузите DOCX и настройте источники полей (справочники, предыдущий документ). Служебный «процесс» в базе создаётся автоматически.</p>
+
+<div class="card" style="margin-bottom:20px;">
+  <h3>Новый шаблон БП</h3>
+  <form method="post" class="form-grid-2">{% csrf_token %}
+    <div class="full-row">
+      <label>Название</label>
+      <input name="name" required placeholder="Например: Оформление служебной записки" />
+    </div>
+    <div class="full-row">
+      <label>Описание</label>
+      <textarea name="description" rows="2" placeholder="Кратко, для чего этот бизнес-процесс"></textarea>
+    </div>
+    <div style="align-self:end;">
+      <button type="submit" class="btn btn-save btn-pill">Создать шаблон</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <table class="zebra">
+    <thead><tr><th>Название</th><th>Описание</th><th>Служебный процесс</th><th></th></tr></thead>
+    <tbody>
+    {% for t in templates %}
+      <tr>
+        <td><strong>{{ t.name }}</strong></td>
+        <td class="text-muted">{{ t.description|truncatewords:14 }}</td>
+        <td>{{ t.legacy_process.name }}</td>
+        <td><a href="{% url 'ui-bpm-process-template-detail' bpt_id=t.bpt_id %}" class="btn btn-edit btn-inline btn-pill">Настроить БП</a></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="4">Шаблонов пока нет</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

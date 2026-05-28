@@ -1,0 +1,6 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<a class="back-link" href="{% url 'ui-bpm-operator-hub' %}">← Назад</a>
+<h2>Процесс без шагов</h2>
+<div class="alert alert-warn">В шаблоне не заданы шаги с типами документов. Обратитесь к специалисту.</div>
+{% endblock %}

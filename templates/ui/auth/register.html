@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <title>Регистрация</title>
+    <style>
+        body { font-family: "Segoe UI", sans-serif; background:#f3f4f6; }
+        .card { max-width:520px; margin:40px auto; background:#fff; padding:28px; border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.08); }
+        label { display:block; margin-bottom:4px; }
+        input, select, button { width:100%; box-sizing:border-box; padding:10px; margin:6px 0 12px 0; border:1px solid #d1d5db; border-radius:10px; }
+        button { background:#111827; color:#fff; }
+        .err { color:#dc2626; font-size:13px; margin-top:-8px; margin-bottom:10px; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>Регистрация пользователя</h2>
+    <form method="post">{% csrf_token %}
+        <label>Логин</label><input name="login" required />
+        {% if field_errors.login %}<div class="err">{{ field_errors.login }}</div>{% endif %}
+        <label>ФИО</label><input name="full_name" required />
+        {% if field_errors.full_name %}<div class="err">{{ field_errors.full_name }}</div>{% endif %}
+        <label>Пароль</label><input type="password" name="password" required />
+        {% if field_errors.password %}<div class="err">{{ field_errors.password }}</div>{% endif %}
+        <label>Подтверждение пароля</label><input type="password" name="password_confirm" required />
+        {% if field_errors.password_confirm %}<div class="err">{{ field_errors.password_confirm }}</div>{% endif %}
+        <label>Роль</label>
+        <select name="role_id" required>
+            {% for role in roles %}
+            <option value="{{ role.role_id }}">
+              {% if role.role_name == "ADMIN" %}Администратор{% elif role.role_name == "SPECIALIST" %}Специалист по автоматизации{% else %}Оператор{% endif %}
+            </option>
+            {% endfor %}
+        </select>
+        {% if field_errors.role_id %}<div class="err">{{ field_errors.role_id }}</div>{% endif %}
+        <button type="submit">Зарегистрироваться</button>
+    </form>
+    <a href="/login/">Назад ко входу</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{% extends "ui/base.html" %}
+{% load ui_labels %}
+{% block content %}
+<h2>Дашборд</h2>
+<p>Роль: <b>{{ role_name|role_ru }}</b></p>
+<div class="cards-row" style="margin:16px 0;">
+  {% for card in cards %}
+  <a href="{{ card.url }}" class="card hover" style="text-decoration:none; color:#111827; display:block;">
+    {{ card.title }}
+  </a>
+  {% endfor %}
+</div>
+<h3>Статистика</h3>
+<table>
+  <tbody>
+  {% for key, value in stats.items %}
+    <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+{% block page_help %}
+После входа здесь показываются основные разделы и краткая статистика по вашей роли.
+{% endblock %}

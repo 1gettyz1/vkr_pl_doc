@@ -1,0 +1,98 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<a class="back-link" href="{% url 'ui-bpm-process-templates' %}">← К шаблонам БП</a>
+<h2>Настройка БП: {{ bpt.name }}</h2>
+<p class="text-muted">Этапы — это типы документов по порядку. В типе обязателен загруженный DOCX. Источники полей (справочник, предыдущий шаг) настраиваются в «Правилах»; производственный объект определяется по справочнику с колонками <code>name</code> и <code>object_type</code> (см. справочник «Объекты…» в демо).</p>
+
+<div class="card" style="margin-bottom:18px;">
+  <h3 style="margin-top:0;">Параметры шаблона</h3>
+  <form method="post" class="form-grid-2">{% csrf_token %}
+    <input type="hidden" name="action" value="update_meta" />
+    <div class="full-row"><label>Название БП</label><input type="text" name="name" value="{{ bpt.name }}" required /></div>
+    <div class="full-row"><label>Описание</label><textarea name="description" rows="2">{{ bpt.description }}</textarea></div>
+    <div style="align-self:end;"><button type="submit" class="btn btn-save btn-pill">Сохранить</button></div>
+  </form>
+</div>
+
+<div class="card" style="margin-bottom:18px;">
+  <h3 style="margin-top:0;">Новый этап: создать тип документа и загрузить DOCX</h3>
+  <p class="hint">Один шаг: создаётся тип документа, извлекаются поля из DOCX, этап сразу попадает в БП. Без отдельной «дозагрузки» шаблона.</p>
+  <form method="post" enctype="multipart/form-data" class="form-grid-4">{% csrf_token %}
+    <input type="hidden" name="action" value="add_step_docx" />
+    <div><label>Порядок</label><input type="number" name="step_order" value="1" min="1" /></div>
+    <div><label>Название этапа</label><input name="step_name" placeholder="Служебная записка" /></div>
+    <div><label>Название нового типа документа</label><input name="new_doc_type_name" required placeholder="Уникальное имя типа" /></div>
+    <div class="full-row"><label>Описание типа (опц.)</label><input name="new_doc_type_description" /></div>
+    <div class="full-row"><label>Файл DOCX</label><input type="file" name="template_file" accept=".docx" required /></div>
+    <div class="full-row">
+      <label style="display:flex;align-items:center;gap:8px;width:auto;">
+        <input type="checkbox" name="has_table_template" value="on" style="width:auto;margin:0;" />
+        В документе есть <strong>таблица</strong> (две подряд строки с одинаковыми плейсхолдерами)
+      </label>
+    </div>
+    <div style="align-self:end;"><button type="submit" class="btn btn-save btn-pill">Добавить этап</button></div>
+  </form>
+</div>
+
+<div class="card" style="margin-bottom:18px;">
+  <h3 style="margin-top:0;">Добавить этап из существующего типа (уже с DOCX)</h3>
+  <form method="post" class="form-grid-4">{% csrf_token %}
+    <input type="hidden" name="action" value="add_step" />
+    <div><label>Порядок</label><input type="number" name="step_order" value="1" min="1" /></div>
+    <div><label>Название этапа</label><input name="step_name" placeholder="Приказ" /></div>
+    <div><label>Тип документа</label>
+      <select name="document_type_id" required>
+        <option value="">— только с загруженным DOCX —</option>
+        {% for dt in doc_types_with_template %}
+          <option value="{{ dt.document_type_id }}">{{ dt.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="align-self:end;"><button type="submit" class="btn btn-save btn-pill">Добавить этап</button></div>
+  </form>
+</div>
+
+<div class="card">
+  <table class="zebra">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Этап</th>
+        <th>Тип документа</th>
+        <th>Предпросмотр шаблона</th>
+        <th>DOCX / поля</th>
+        <th>Правила полей</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for s in steps %}
+      <tr>
+        <td>{{ s.step_order }}</td>
+        <td>{{ s.name }}</td>
+        <td>{{ s.document_type.name }}</td>
+        <td>
+          <a href="{% url 'ui-template-preview' document_type_id=s.document_type_id %}?bpt_id={{ bpt.bpt_id }}&amp;pdt_id={{ s.pdt_id }}" class="btn btn-edit btn-inline btn-pill">Предпросмотр</a>
+        </td>
+        <td><a href="{% url 'ui-bpm-step-document' bpt_id=bpt.bpt_id pdt_id=s.pdt_id %}" class="btn btn-save btn-inline btn-pill">DOCX</a></td>
+        <td><a href="{% url 'ui-bpm-field-rules' bpt_id=bpt.bpt_id pdt_id=s.pdt_id %}" class="btn btn-edit btn-inline btn-pill">Правила</a></td>
+        <td>
+          <form method="post" style="display:inline;" onsubmit="return confirm('Удалить этап?');">{% csrf_token %}
+            <input type="hidden" name="action" value="delete_step" />
+            <input type="hidden" name="pdt_id" value="{{ s.pdt_id }}" />
+            <button type="submit" class="btn btn-delete btn-inline btn-pill">Удалить</button>
+          </form>
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="7">Этапы не заданы</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<form method="post" style="margin-top:16px;" onsubmit="return confirm('Удалить шаблон БП целиком?');">{% csrf_token %}
+  <input type="hidden" name="action" value="delete_template" />
+  <button type="submit" class="btn btn-delete btn-pill">Удалить шаблон</button>
+</form>
+{% endblock %}

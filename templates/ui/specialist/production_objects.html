@@ -1,0 +1,34 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<a class="back-link" href="/ui/document-types/">← Назад</a>
+<h2>Производственные объекты</h2>
+<h3>{% if edit_object %}Редактировать объект{% else %}Создать объект{% endif %}</h3>
+<form method="post" style="display:grid;grid-template-columns:1fr 2fr auto;gap:10px;align-items:end;">{% csrf_token %}
+  <input type="hidden" name="action" value="{% if edit_object %}update{% else %}create{% endif %}" />
+  {% if edit_object %}<input type="hidden" name="object_id" value="{{ edit_object.object_id }}" />{% endif %}
+  <div><label>Тип объекта</label><input name="object_type" value="{{ edit_object.object_type }}" required /></div>
+  <div><label>Название</label><input name="name" value="{{ edit_object.name }}" required /></div>
+  <button type="submit" class="btn-inline">{% if edit_object %}Сохранить{% else %}Создать{% endif %}</button>
+</form>
+<table>
+  <thead><tr><th>Тип объекта</th><th>Название</th><th>Действия</th></tr></thead>
+  <tbody>
+    {% for o in objects %}
+      <tr>
+        <td>{{ o.object_type }}</td>
+        <td>{{ o.name }}</td>
+        <td>
+          <a href="/ui/production-objects/?edit_id={{ o.object_id }}"><button type="button" class="btn-inline">Редактировать</button></a>
+          <form method="post" style="display:inline;">{% csrf_token %}
+            <input type="hidden" name="action" value="delete" />
+            <input type="hidden" name="object_id" value="{{ o.object_id }}" />
+            <button type="submit" class="btn-inline">Удалить</button>
+          </form>
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="3">Объекты пока не добавлены</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

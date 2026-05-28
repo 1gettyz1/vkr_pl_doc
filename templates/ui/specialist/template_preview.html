@@ -1,0 +1,30 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<a class="back-link" href="/ui/document-types/">← Назад</a>
+<h2>Предпросмотр шаблона: {{ doc_type.name }}</h2>
+<div style="background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:20px; min-height:260px;">
+  {% if preview_html %}
+    {{ preview_html|safe }}
+  {% else %}
+    <p style="color:#6b7280;">Шаблон пока не содержит распознанного текста. Проверьте DOCX и настройку ключей.</p>
+  {% endif %}
+</div>
+{% if bpm_step_preview %}
+<h3>Легенда (правила этого шага в БП)</h3>
+<ul>
+  <li><span class="ph constant">Постоянный</span> — постоянный реквизит (автоподстановка по правилу: справочник или предыдущий документ)</li>
+  <li><span class="ph variable">Переменный</span> — переменный реквизит (значение вводит оператор на шаге)</li>
+</ul>
+{% elif not simple_preview %}
+<h3>Легенда</h3>
+<ul>
+  <li><span class="ph constant">Постоянный</span> — постоянный реквизит</li>
+  <li><span class="ph variable">Переменный</span> — переменный реквизит</li>
+</ul>
+{% else %}
+<p class="text-muted" style="margin-top:12px;">Упрощённый просмотр структуры DOCX. Обработка полей задаётся в шаблоне БП.</p>
+{% endif %}
+{% endblock %}
+{% block page_help %}
+{% if bpm_step_preview %}Подсветка постоянных и переменных реквизитов по правилам выбранного шага БП.{% elif simple_preview %}Структура шаблона без классификации полей по БП.{% else %}Предпросмотр с подсветкой реквизитов типа документа.{% endif %}
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "ui/base.html" %}
+{% load ui_labels %}
+{% block content %}
+<h2>Журнал операций</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Пользователь</th>
+      <th>Роль</th>
+      <th>Документ</th>
+      <th>Этап</th>
+      <th>Дата</th>
+      <th>Результат</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for log in logs %}
+    <tr>
+      <td>{{ log.user_id.full_name }}</td>
+      <td>{{ log.user_id.role_id.role_name|role_ru }}</td>
+      <td>{% if log.document_id %}#{{ log.document_id.document_id }}{% else %}-{% endif %}</td>
+      <td>{% if log.step_id %}{{ log.step_id.name }}{% else %}-{% endif %}</td>
+      <td>{{ log.operation_datetime }}</td>
+      <td>{{ log.operation_result }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+{% block page_help %}
+Здесь отображаются все ключевые действия пользователей: вход, настройка шаблонов, автозаполнение и формирование документов.
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<a class="back-link" href="/ui/document-types/">← Типы документов</a>
+<h2>Настройка полей: {{ doc_type.name }}</h2>
+{% if doc_type.has_table_template %}
+<div class="alert alert-info" style="margin-bottom:14px;">Тип помечен как <strong>шаблон с таблицей</strong>: в DOCX заданы две подряд строки с одинаковыми плейсхолдерами; оператор добавляет строки данных при заполнении.</div>
+{% endif %}
+<p class="text-muted">Здесь задаются подписи, тип данных и обязательность полей шаблона. В каталоге типов все реквизиты хранятся как <strong>переменные</strong>; поведение «постоянное / автозаполнение» настраивается специалистом отдельно в <strong>шаблоне БП → правила полей</strong>.</p>
+
+<form method="post" style="display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:12px;align-items:end;margin-bottom:22px;">{% csrf_token %}
+  <input type="hidden" name="action" value="add_manual" />
+  <div><label>Ключ в шаблоне</label><input name="manual_placeholder" placeholder="memo_topic" /></div>
+  <div><label>Название реквизита</label><input name="manual_name" /></div>
+  <div><label>Тип данных</label><select name="manual_data_type"><option value="text">Текст</option><option value="number">Число</option><option value="date">Дата</option><option value="select">Список</option><option value="boolean">Логический</option></select></div>
+  <div style="align-self:end;"><label style="display:flex;align-items:center;gap:8px;width:auto;"><input type="checkbox" name="manual_required" /> Обязательное</label></div>
+  <div style="grid-column:1/-1;"><button type="submit" class="btn btn-save btn-pill">Добавить поле вручную</button></div>
+</form>
+
+<form method="post">{% csrf_token %}
+<table class="zebra">
+  <thead>
+    <tr><th>Ключ</th><th>Название</th><th>Тип</th><th>Обяз.</th></tr>
+  </thead>
+  <tbody>
+    {% for r in requisites %}
+    <tr>
+      <td><code>{{ r.placeholder_key }}</code>{% if r.is_table_column %} <span class="badge badge-info">таблица</span>{% endif %}</td>
+      <td><input name="name_{{ r.requisite_id }}" value="{{ r.name }}" /></td>
+      <td>
+        <select name="data_type_{{ r.requisite_id }}">
+          <option value="text" {% if r.data_type == 'text' %}selected{% endif %}>Текст</option>
+          <option value="number" {% if r.data_type == 'number' %}selected{% endif %}>Число</option>
+          <option value="date" {% if r.data_type == 'date' %}selected{% endif %}>Дата</option>
+          <option value="select" {% if r.data_type == 'select' %}selected{% endif %}>Список</option>
+          <option value="boolean" {% if r.data_type == 'boolean' %}selected{% endif %}>Логический</option>
+        </select>
+      </td>
+      <td style="text-align:center;"><input type="checkbox" name="is_required_{{ r.requisite_id }}" {% if r.is_required %}checked{% endif %} /></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<div style="margin-top:18px;">
+  <button type="submit" class="btn btn-save btn-pill">Сохранить изменения</button>
+  <a href="{% url 'ui-template-preview' document_type_id=doc_type.document_type_id %}?simple=1" class="btn btn-edit btn-inline btn-pill">Предпросмотр</a>
+</div>
+</form>
+{% endblock %}
+{% block page_help %}
+Поля шаблона в базе всегда переменные; источники значений задаются в карточке шаблона БП.
+{% endblock %}

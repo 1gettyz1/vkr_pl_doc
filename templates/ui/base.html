@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Платформа документов</title>
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem("ui-theme") === "dark") {
+                    document.documentElement.setAttribute("data-theme", "dark");
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <style>
+        :root {
+          --bg: #f5f2ed;
+          --sidebar-bg: #252423;
+          --sidebar-text: #e8e6e3;
+          --card: #ffffff;
+          --border: #e5e7eb;
+          --card-border: #eef0f4;
+          --topbar-bg: #ffffff;
+          --text: #111827;
+          --muted: #6b7280;
+          --save: #1d4ed8;
+          --edit: #c2410c;
+          --delete: #b91c1c;
+          --back: #6b7280;
+          --info: #2563eb;
+          --ok: #16a34a;
+          --warn: #ca8a04;
+          --err: #dc2626;
+          --link: #2563eb;
+          --row-hover: #f8fafc;
+          --input-bg: #ffffff;
+          --input-border: #d1d5db;
+          --field-border: #f1f5f9;
+          --readonly-bg: #f8fafc;
+          --readonly-text: #334155;
+          --panel-shadow: rgba(15, 23, 42, 0.06);
+          --card-shadow: rgba(15, 23, 42, 0.05);
+          --toggle-track: #d1d5db;
+          --toggle-thumb: #ffffff;
+          --inset-bg: #fafafa;
+        }
+        [data-theme="dark"] {
+          --bg: #141312;
+          --card: #252423;
+          --border: #3f3e3d;
+          --card-border: #3f3e3d;
+          --topbar-bg: #252423;
+          --text: #e8e6e3;
+          --muted: #a8a29e;
+          --back: #57534e;
+          --row-hover: #2d2c2b;
+          --input-bg: #1a1918;
+          --input-border: #504e4c;
+          --field-border: #3f3e3d;
+          --readonly-bg: #1a1918;
+          --readonly-text: #cbd5e1;
+          --link: #93c5fd;
+          --panel-shadow: rgba(0, 0, 0, 0.35);
+          --card-shadow: rgba(0, 0, 0, 0.25);
+          --toggle-track: #504e4c;
+          --toggle-thumb: #e8e6e3;
+          --inset-bg: #2d2c2b;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background:var(--bg); color:var(--text); transition: background .2s, color .2s; }
+        .layout { display:flex; min-height: 100vh; }
+        .sidebar { width:264px; background:var(--sidebar-bg); color:var(--sidebar-text); padding:22px 16px 22px 14px; box-shadow: 4px 0 24px rgba(0,0,0,.12); }
+        .brand { font-weight:700; margin-bottom:18px; letter-spacing:-0.02em; color:#fff; font-size:17px; }
+        .menu-title { margin:16px 0 8px 8px; color:rgba(255,255,255,.45); font-size:11px; text-transform:uppercase; letter-spacing:.06em; }
+        .menu a { display:block; padding:10px 12px 10px 14px; text-decoration:none; color:rgba(255,255,255,.88); border-radius:10px; margin-bottom:4px; transition: background .15s; border-left:3px solid transparent; }
+        .menu a:hover { background:rgba(255,255,255,.07); }
+        .menu a.active { background:rgba(37,99,235,.28); border-left-color:var(--save); color:#fff; }
+        .main { flex:1; }
+        .topbar { background:var(--topbar-bg); border-bottom:1px solid var(--border); padding:14px 24px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; transition: background .2s, border-color .2s; }
+        .topbar-user { display:flex; align-items:center; gap:12px 16px; flex-wrap:wrap; justify-content:flex-end; }
+        .topbar-user-meta { font-size:14px; line-height:1.35; }
+        .topbar-user-meta strong { font-weight:600; }
+        .topbar-user-role { color:var(--muted); font-size:13px; font-weight:500; margin-left:4px; }
+        .topbar-actions { display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .theme-toggle { display:inline-flex; align-items:center; gap:8px; cursor:pointer; user-select:none; margin:0; }
+        .theme-toggle input { position:absolute; opacity:0; width:0; height:0; margin:0; pointer-events:none; }
+        .theme-toggle-track {
+          width:44px; height:24px; background:var(--toggle-track); border-radius:999px; position:relative;
+          transition: background .2s; flex-shrink:0;
+        }
+        .theme-toggle-track::after {
+          content:""; position:absolute; width:18px; height:18px; background:var(--toggle-thumb); border-radius:50%;
+          top:3px; left:3px; transition: transform .2s, background .2s; box-shadow:0 1px 3px rgba(0,0,0,.25);
+        }
+        .theme-toggle input:checked + .theme-toggle-track { background:var(--save); }
+        .theme-toggle input:checked + .theme-toggle-track::after { transform:translateX(20px); }
+        .theme-toggle-label { font-size:13px; color:var(--muted); white-space:nowrap; }
+        .content { padding:24px; }
+        .panel { background:var(--card); border-radius:16px; padding:22px; box-shadow:0 8px 30px var(--panel-shadow); border:1px solid var(--card-border); transition: background .2s, border-color .2s, box-shadow .2s; }
+        table { width:100%; border-collapse: collapse; }
+        th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--border); }
+        table.zebra tbody tr:hover { background:var(--row-hover); }
+        table.tight td, table.tight th { font-size:13px; vertical-align:top; }
+        input, select, textarea { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid var(--input-border); border-radius:10px; margin-top:4px; margin-bottom:12px; background:var(--input-bg); color:var(--text); }
+        button { cursor:pointer; border:none; border-radius:10px; font-weight:600; }
+        .btn { display:inline-block; padding:10px 16px; color:#fff; text-decoration:none; text-align:center; }
+        .btn-save { background:var(--save); }
+        .btn-edit { background:var(--edit); color:#fff; }
+        .btn-delete { background:var(--delete); }
+        .btn-back { background:var(--back); color:#fff; }
+        .btn-inline { width:auto; margin:0 4px 0 0; }
+        .btn-pill { border-radius: 999px; padding: 9px 18px; }
+        .card { background:var(--card); border-radius:14px; padding:18px 20px; border:1px solid var(--card-border); box-shadow:0 4px 18px var(--card-shadow); transition: background .2s, border-color .2s, box-shadow .2s; }
+        .card.hover:hover { box-shadow:0 8px 28px var(--panel-shadow); }
+        .cards-row { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:16px; }
+        .text-muted { color:var(--muted); font-size:14px; }
+        .hint { font-size:12px; color:var(--muted); margin-top:4px; }
+        .alert { padding:12px 14px; border-radius:10px; margin:10px 0; font-size:14px; }
+        .alert-success { background:#dcfce7; color:#14532d; border:1px solid #bbf7d0; }
+        .alert-warn { background:#fef9c3; color:#854d0e; border:1px solid #fde047; }
+        .alert-error { background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
+        .alert-info { background:#dbeafe; color:#1e3a8a; border:1px solid #bfdbfe; }
+        [data-theme="dark"] .alert-success { background:#14532d; color:#dcfce7; border-color:#166534; }
+        [data-theme="dark"] .alert-warn { background:#713f12; color:#fef9c3; border-color:#ca8a04; }
+        [data-theme="dark"] .alert-error { background:#7f1d1d; color:#fee2e2; border-color:#b91c1c; }
+        [data-theme="dark"] .alert-info { background:#1e3a8a; color:#dbeafe; border-color:#2563eb; }
+        .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; margin-left:6px; }
+        .badge-info { background:#dbeafe; color:#1d4ed8; }
+        .badge-draft { background:#e5e7eb; color:var(--text); }
+        .badge-in_progress { background:#fef9c3; color:#854d0e; }
+        .badge-completed { background:#dcfce7; color:#166534; }
+        [data-theme="dark"] .badge-info { background:#1e3a8a; color:#93c5fd; }
+        [data-theme="dark"] .badge-draft { background:#3f3e3d; color:#e8e6e3; }
+        [data-theme="dark"] .badge-in_progress { background:#713f12; color:#fef9c3; }
+        [data-theme="dark"] .badge-completed { background:#14532d; color:#bbf7d0; }
+        .field-row { padding:10px 0; border-bottom:1px solid var(--field-border); }
+        .field-constant { border-left:4px solid var(--ok); padding-left:12px; }
+        .field-variable { border-left:4px solid var(--edit); padding-left:12px; }
+        .readonly-input { background:var(--readonly-bg); color:var(--readonly-text); }
+        .form-grid-2 { display:grid; grid-template-columns: 1fr auto; gap:12px; align-items:end; }
+        .form-grid-3 { display:grid; grid-template-columns: 1fr 1fr auto; gap:12px; align-items:end; }
+        .form-grid-4 { display:grid; grid-template-columns: repeat(4, minmax(140px,1fr)); gap:12px; align-items:end; }
+        .full-row { grid-column: 1 / -1; }
+        .ph.constant { background:#dcfce7; padding:2px 6px; border-radius:6px; }
+        .ph.variable { background:#fee2e2; padding:2px 6px; border-radius:6px; }
+        [data-theme="dark"] .ph.constant { background:#14532d; color:#dcfce7; }
+        [data-theme="dark"] .ph.variable { background:#7f1d1d; color:#fee2e2; }
+        .status-pill { display:inline-block; padding:3px 8px; border-radius:999px; font-size:12px; font-weight:600; }
+        .status-draft { background:#e5e7eb; color:#111827; }
+        .status-filled { background:#dbeafe; color:#1d4ed8; }
+        .status-generated { background:#dcfce7; color:#166534; }
+        .status-archived { background:#f3e8ff; color:#6b21a8; }
+        [data-theme="dark"] .status-draft { background:#3f3e3d; color:#e8e6e3; }
+        [data-theme="dark"] .status-filled { background:#1e3a8a; color:#93c5fd; }
+        [data-theme="dark"] .status-generated { background:#14532d; color:#bbf7d0; }
+        [data-theme="dark"] .status-archived { background:#581c87; color:#e9d5ff; }
+        .back-link { display:inline-block; margin-bottom:10px; text-decoration:none; color:var(--link); font-weight:600; }
+        .inset-panel { margin-bottom:16px; padding:14px; border:1px solid var(--card-border); border-radius:12px; background:var(--inset-bg); }
+    </style>
+</head>
+{% load ui_labels %}
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="brand">Платформа ВКР</div>
+        <nav class="menu">
+            <a href="/" class="{% if request.path == '/' %}active{% endif %}">Дашборд</a>
+            <a href="/ui/help/" class="{% if '/ui/help/' in request.path %}active{% endif %}">Руководство</a>
+            {% if current_enterprise_user %}
+            <a href="{% url 'ui-system-styleguide' %}" class="{% if '/ui/system/styleguide' in request.path %}active{% endif %}">Стили UI</a>
+                {% if current_enterprise_user.role_id.role_name == "ADMIN" %}
+                    <div class="menu-title">Основное</div>
+                    <a href="/ui/users/" class="{% if '/ui/users/' in request.path %}active{% endif %}">Пользователи</a>
+                    <a href="/ui/roles/" class="{% if '/ui/roles/' in request.path %}active{% endif %}">Роли</a>
+                    <a href="/ui/documents/" class="{% if '/ui/documents/' in request.path %}active{% endif %}">Документы</a>
+                    <div class="menu-title">Контроль</div>
+                    <a href="/ui/logs/" class="{% if '/ui/logs/' in request.path %}active{% endif %}">Журнал операций</a>
+                {% elif current_enterprise_user.role_id.role_name == "SPECIALIST" %}
+                    <div class="menu-title">Бизнес-процессы</div>
+                    <a href="/ui/bpm/process-templates/" class="{% if '/ui/bpm/process-templates' in request.path %}active{% endif %}">Шаблоны БП</a>
+                    <a href="/ui/bpm/dictionaries/" class="{% if '/ui/bpm/dictionaries' in request.path %}active{% endif %}">Справочники</a>
+                    <div class="menu-title">Документы</div>
+                    <a href="/ui/document-types/" class="{% if '/ui/document-types/' in request.path %}active{% endif %}">Типы документов</a>
+                    <a href="/ui/templates/create/" class="{% if '/ui/templates/create' in request.path %}active{% endif %}">Загрузить шаблон</a>
+                    <div class="menu-title">Прочее</div>
+                    <a href="/ui/requisites/" class="{% if '/ui/requisites/' in request.path %}active{% endif %}">Реквизиты</a>
+                    <a href="/ui/logs/" class="{% if '/ui/logs/' in request.path %}active{% endif %}">Журнал операций</a>
+                {% else %}
+                    <div class="menu-title">Процесс</div>
+                    <a href="/ui/bpm/run/" class="{% if '/ui/bpm/run' in request.path or '/ui/bpm/start' in request.path or '/ui/bpm/instance/' in request.path %}active{% endif %}">БП</a>
+                    <a href="/ui/bpm/dictionaries/" class="{% if '/ui/bpm/dictionaries' in request.path %}active{% endif %}">Справочники</a>
+                    <a href="/ui/documents/" class="{% if '/ui/documents/' in request.path %}active{% endif %}">Документы</a>
+                {% endif %}
+            {% endif %}
+        </nav>
+    </aside>
+    <main class="main">
+        <div class="topbar">
+            <div>
+                Система автоматизации структурированных документов
+            </div>
+            <div class="topbar-user">
+                {% if current_enterprise_user %}
+                    <span class="topbar-user-meta">
+                        <strong>{{ current_enterprise_user.full_name }}</strong>
+                        <span class="topbar-user-role">({{ current_enterprise_user.role_id.role_name|role_ru }})</span>
+                    </span>
+                    <div class="topbar-actions">
+                        <a href="/profile/" class="btn btn-save btn-pill btn-inline">Профиль</a>
+                        <a href="/logout/" class="btn btn-back btn-pill btn-inline">Выход</a>
+                        <label class="theme-toggle" title="Тёмная тема">
+                            <input type="checkbox" id="theme-toggle" aria-label="Тёмная тема">
+                            <span class="theme-toggle-track" aria-hidden="true"></span>
+                            <span class="theme-toggle-label">Тёмная</span>
+                        </label>
+                    </div>
+                {% else %}
+                    <a href="/login/" class="btn btn-save btn-pill">Вход</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="content">
+            <div class="panel">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </main>
+</div>
+<script>
+(function () {
+    var root = document.documentElement;
+    var toggle = document.getElementById("theme-toggle");
+    if (!toggle) return;
+    function applyTheme(dark) {
+        if (dark) root.setAttribute("data-theme", "dark");
+        else root.removeAttribute("data-theme");
+        try { localStorage.setItem("ui-theme", dark ? "dark" : "light"); } catch (e) {}
+    }
+    toggle.checked = root.getAttribute("data-theme") === "dark";
+    toggle.addEventListener("change", function () { applyTheme(toggle.checked); });
+})();
+</script>
+</body>
+</html>

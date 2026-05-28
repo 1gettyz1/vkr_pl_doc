@@ -1,0 +1,117 @@
+{% extends "ui/base.html" %}
+{% load ui_labels %}
+{% block content %}
+<a class="back-link" href="{% url 'ui-bpm-dictionaries' %}">← К списку</a>
+<h2>{{ dictionary.name }}</h2>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+{% if can_manage_structure %}
+<div class="card" style="margin-bottom:16px;">
+  <h3 style="margin-top:0;">Название справочника</h3>
+  <form method="post" class="form-grid-2">{% csrf_token %}
+    <input type="hidden" name="action" value="rename" />
+    <div><label>Название</label><input type="text" name="name" value="{{ dictionary.name }}" required /></div>
+    <div style="align-self:end;"><button type="submit" class="btn btn-save btn-pill">Сохранить</button></div>
+  </form>
+</div>
+{% endif %}
+
+{% if columns and can_manage_structure %}
+<div class="card" style="margin-bottom:16px;">
+  <h3 style="margin-top:0;">Главное поле (выбор записи при запуске БП)</h3>
+  <p class="hint">По этому столбцу формируется подпись записи при запуске БП и внутренний код строки (без ручного «lookup»).</p>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="set_selection_column" />
+    <label>Колонка</label>
+    <select name="selection_column_key">
+      <option value="">— по умолчанию первая колонка —</option>
+      {% for c in columns %}
+        <option value="{{ c.key }}" {% if dictionary.selection_column_key == c.key %}selected{% endif %}>{{ c.title }} ({{ c.key }})</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-save btn-pill" style="margin-top:10px;">Применить</button>
+  </form>
+</div>
+{% endif %}
+
+{% if can_manage_structure %}
+<div class="card" style="margin-bottom:16px;">
+  <h3 style="margin-top:0;">Колонки</h3>
+  <form method="post" class="form-grid-3">{% csrf_token %}
+    <input type="hidden" name="action" value="add_column" />
+    <div><label>Ключ поля</label><input name="col_key" placeholder="department" pattern="[a-zA-Z0-9_]+" /></div>
+    <div><label>Подпись</label><input name="col_title" placeholder="Подразделение" /></div>
+    <div style="align-self:end;"><button type="submit" class="btn btn-save btn-pill">Добавить колонку</button></div>
+  </form>
+  {% if columns %}
+  <table class="zebra tight" style="margin-top:12px;">
+    <thead><tr><th>Ключ</th><th>Подпись</th><th></th></tr></thead>
+    <tbody>
+    {% for c in columns %}
+      <tr>
+        <td><code>{{ c.key }}</code></td>
+        <td>{{ c.title }}</td>
+        <td>
+          <form method="post" style="display:inline;" onsubmit="return confirm('Удалить колонку?');">{% csrf_token %}
+            <input type="hidden" name="action" value="delete_column" />
+            <input type="hidden" name="column_id" value="{{ c.column_id }}" />
+            <button type="submit" class="btn btn-delete btn-inline btn-pill">Удалить</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="alert alert-warn">Добавьте колонки — затем строки данных.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="card">
+  <h3 style="margin-top:0;">Строки данных</h3>
+  {% if columns %}
+  {% for row in records_data %}
+  <div class="inset-panel">
+  <form method="post" style="margin:0;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="save_record" />
+    <input type="hidden" name="record_id" value="{{ row.record.record_id }}" />
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end;">
+      {% for c in columns %}
+      <div style="min-width:140px;">
+        <label>{{ c.title }}</label>
+        <input type="text" name="cell_{{ row.record.record_id }}_{{ c.key }}" value="{{ row.cells|lookupdict:c.key }}" />
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-save btn-pill">Сохранить</button>
+    </div>
+  </form>
+  <form method="post" style="margin-top:10px;" onsubmit="return confirm('Удалить строку?');">{% csrf_token %}
+    <input type="hidden" name="action" value="delete_record" />
+    <input type="hidden" name="record_id" value="{{ row.record.record_id }}" />
+    <button type="submit" class="btn btn-delete btn-inline btn-pill">Удалить строку</button>
+  </form>
+  </div>
+  {% empty %}
+  <p class="text-muted">Строк пока нет.</p>
+  {% endfor %}
+
+  <h4>Новая строка</h4>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="add_record" />
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end;">
+      {% for c in columns %}
+      <div style="min-width:140px;"><label>{{ c.title }}</label><input name="newcell_{{ c.key }}" /></div>
+      {% endfor %}
+      <button type="submit" class="btn btn-save btn-pill">Добавить</button>
+    </div>
+  </form>
+  {% else %}
+  <p class="text-muted">Сначала добавьте колонки.</p>
+  {% endif %}
+</div>
+{% endblock %}

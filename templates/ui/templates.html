@@ -1,0 +1,15 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<h2>Настройка шаблонов</h2>
+{% for t in types %}
+    <h3>{{ t.name }}</h3>
+    <p>{{ t.description }}</p>
+    <ul>
+    {% for r in t.requisites.all %}
+        <li>{{ r.name }} ({{ r.data_type }}) {% if r.is_required %}- обязательно{% endif %}</li>
+    {% empty %}
+        <li>Реквизиты не настроены</li>
+    {% endfor %}
+    </ul>
+{% endfor %}
+{% endblock %}

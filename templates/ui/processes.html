@@ -1,0 +1,34 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<h2>Бизнес-процессы</h2>
+<h3>{% if edit_process %}Редактирование процесса{% else %}Создать процесс{% endif %}</h3>
+<form method="post">{% csrf_token %}
+  <input type="hidden" name="action" value="{% if edit_process %}update{% else %}create{% endif %}" />
+  {% if edit_process %}<input type="hidden" name="process_id" value="{{ edit_process.process_id }}" />{% endif %}
+  <label>Название</label><input name="name" value="{{ edit_process.name }}" required />
+  <label>Описание</label><textarea name="description">{{ edit_process.description }}</textarea>
+  <button type="submit">{% if edit_process %}Сохранить{% else %}Создать{% endif %}</button>
+</form>
+{% for p in processes %}
+    <h3>{{ p.name }}</h3>
+    <p>{{ p.description }}</p>
+    <div style="display:flex; gap:8px; margin-bottom:8px;">
+      <a href="/ui/processes/?edit_id={{ p.process_id }}"><button type="button">Редактировать</button></a>
+      <form method="post" style="display:inline;">{% csrf_token %}
+        <input type="hidden" name="action" value="delete" />
+        <input type="hidden" name="process_id" value="{{ p.process_id }}" />
+        <button type="submit">Удалить</button>
+      </form>
+    </div>
+    <ol>
+    {% for s in p.steps.all %}
+        <li>{{ s.name }} ({{ s.step_order }})</li>
+    {% empty %}
+        <li>Шаги отсутствуют</li>
+    {% endfor %}
+    </ol>
+{% endfor %}
+{% endblock %}
+{% block page_help %}
+Раздел бизнес-процессов: здесь специалист проверяет состав процессов и связанные этапы.
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<h2>Типы документов</h2>
+<p class="text-muted">Поиск и редактирование типа (название, описание). Поля шаблона — на странице <strong>настройки полей</strong> (подписи, тип данных, обязательность). Источники значений в БП — в шаблоне бизнес-процесса.</p>
+
+<form method="get" class="card" style="margin-bottom:16px; display:grid; grid-template-columns: 1fr auto; gap:12px; align-items:end;">
+  <div>
+    <label>Поиск по названию</label>
+    <input name="q" value="{{ search_q }}" placeholder="Начните вводить…" />
+  </div>
+  <button type="submit" class="btn btn-save btn-pill">Найти</button>
+</form>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+{% if edit_type %}
+<div class="card" style="margin-bottom:18px;">
+  <h3 style="margin-top:0;">Редактировать тип документа</h3>
+  <form method="post" class="form-grid-2">{% csrf_token %}
+    <input type="hidden" name="action" value="update_meta" />
+    <input type="hidden" name="document_type_id" value="{{ edit_type.document_type_id }}" />
+    <div class="full-row"><label>Название</label><input type="text" name="name" value="{{ edit_type.name }}" required /></div>
+    <div class="full-row"><label>Описание</label><textarea name="description" rows="2">{{ edit_type.description }}</textarea></div>
+    <div class="full-row">
+      <label style="display:flex;align-items:center;gap:8px;width:auto;">
+        <input type="checkbox" name="has_table_template" value="on" {% if edit_type.has_table_template %}checked{% endif %} style="width:auto;margin:0;" />
+        В документе есть <strong>таблица с повторяющимися строками</strong> (две подряд строки с одинаковыми плейсхолдерами в DOCX)
+      </label>
+      <p class="hint">При включении и наличии DOCX система проверит пару строк и сохранит якорь таблицы. Подробности — в руководстве.</p>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <button type="submit" class="btn btn-save btn-pill">Сохранить тип</button>
+      <a href="{% url 'ui-document-types' %}{% if search_q %}?q={{ search_q|urlencode }}{% endif %}" class="btn btn-back btn-pill">Отмена</a>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+<div style="margin:14px 0;">
+  <a href="/ui/templates/create/" class="btn btn-save btn-pill">Загрузить шаблон</a>
+</div>
+
+<div class="card">
+  <table class="zebra">
+    <thead>
+      <tr>
+        <th>Тип документа</th>
+        <th>Описание</th>
+        <th>DOCX</th>
+        <th>Таблица</th>
+        <th style="min-width:320px;">Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for t in types %}
+      <tr>
+        <td><strong>{{ t.name }}</strong></td>
+        <td class="text-muted">{{ t.description }}</td>
+        <td>{% if t.template_file %}да{% else %}<span class="text-muted">нет</span>{% endif %}</td>
+        <td>{% if t.has_table_template %}<span class="badge badge-info">да</span>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+        <td>
+          {% if t.template_file %}
+          <a href="{% url 'ui-template-preview' document_type_id=t.document_type_id %}?simple=1" class="btn btn-edit btn-inline btn-pill">Предпросмотр</a>
+          {% endif %}
+          <a href="{% url 'ui-template-configure' document_type_id=t.document_type_id %}" class="btn btn-save btn-inline btn-pill">Поля</a>
+          <a href="{% url 'ui-document-types' %}?edit_id={{ t.document_type_id }}{% if search_q %}&amp;q={{ search_q|urlencode }}{% endif %}" class="btn btn-edit btn-inline btn-pill">Редактировать</a>
+          <form method="post" style="display:inline;" onsubmit="return confirm('Удалить тип документа «{{ t.name }}»?');">{% csrf_token %}
+            <input type="hidden" name="action" value="delete" />
+            <input type="hidden" name="document_type_id" value="{{ t.document_type_id }}" />
+            <button type="submit" class="btn btn-delete btn-inline btn-pill">Удалить</button>
+          </form>
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5">Типов не найдено — измените поиск или загрузите шаблон DOCX.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

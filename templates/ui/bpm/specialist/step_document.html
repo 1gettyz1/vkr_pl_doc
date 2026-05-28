@@ -1,0 +1,95 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<a class="back-link" href="{% url 'ui-bpm-process-template-detail' bpt_id=bpt.bpt_id %}">← К шагам шаблона</a>
+<h2>DOCX шаблон шага: {{ pdt.name }}</h2>
+<p class="text-muted">
+  Тип документа «{{ doc_type.name }}».
+  {% if doc_type.has_table_template %}<span class="badge badge-info">Таблица в шаблоне</span>{% endif %}
+  Загрузите файл — в нём задаются плейсхолдеры
+  {% verbatim %}<code>{{ имя_поля }}</code>{% endverbatim %}, по которым создаются реквизиты и подставляются значения при генерации.
+</p>
+
+<div class="card" style="margin-bottom:18px;">
+  <h3 style="margin-top:0;">Файл DOCX</h3>
+  {% if doc_type.template_file %}
+    <p>Текущий файл: <strong>{{ doc_type.template_file.name }}</strong></p>
+  {% else %}
+    <p class="text-muted">Файл ещё не загружен.</p>
+  {% endif %}
+  <form method="post" enctype="multipart/form-data" class="form-grid-3">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="upload_docx" />
+    <div class="full-row"><label>Выберите .docx</label><input type="file" name="template_file" accept=".docx" required /></div>
+    <div class="full-row">
+      <label style="display:flex;align-items:center;gap:8px;width:auto;">
+        <input type="checkbox" name="has_table_template" value="on" style="width:auto;margin:0;" />
+        В документе есть <strong>таблица</strong> (две подряд строки с одинаковыми плейсхолдерами)
+      </label>
+    </div>
+    <div style="align-self:end;"><button type="submit" class="btn btn-save">Загрузить DOCX</button></div>
+  </form>
+</div>
+
+{% if extracted_placeholders %}
+<div class="card" style="margin-bottom:18px;">
+  <h3 style="margin-top:0;">Распознанные плейсхолдеры</h3>
+  <p class="hint">Для каждого найденного ключа в БД создан или будет использован реквизит с тем же <code>placeholder_key</code>.</p>
+  <ul style="columns:2;margin:0;padding-left:20px;">
+    {% for ph in extracted_placeholders %}
+      <li><code>{{ ph }}</code></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<div class="card">
+  <h3 style="margin-top:0;">Реквизиты типа документа</h3>
+  <p class="hint">Уточните русские названия, тип данных и признак constant/variable — затем настройте источники на странице «Источники».</p>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="save_requisites" />
+    <table class="zebra tight">
+      <thead>
+        <tr>
+          <th>Ключ (DOCX)</th>
+          <th>Название поля</th>
+          <th>Тип данных</th>
+          <th>Вид</th>
+          <th>Обязательное</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for req in requisites %}
+        <tr>
+          <td><code>{{ req.placeholder_key }}</code></td>
+          <td><input type="text" name="name_{{ req.requisite_id }}" value="{{ req.name }}" /></td>
+          <td>
+            <select name="data_type_{{ req.requisite_id }}">
+              <option value="text" {% if req.data_type == 'text' %}selected{% endif %}>text</option>
+              <option value="number" {% if req.data_type == 'number' %}selected{% endif %}>number</option>
+              <option value="date" {% if req.data_type == 'date' %}selected{% endif %}>date</option>
+            </select>
+          </td>
+          <td>
+            <select name="field_kind_{{ req.requisite_id }}">
+              <option value="variable" {% if req.field_kind == 'variable' %}selected{% endif %}>variable</option>
+              <option value="constant" {% if req.field_kind == 'constant' %}selected{% endif %}>constant</option>
+            </select>
+          </td>
+          <td style="text-align:center;">
+            <input type="checkbox" name="is_required_{{ req.requisite_id }}" {% if req.is_required %}checked{% endif %} />
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5">Реквизитов пока нет — загрузите DOCX с плейсхолдерами.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% if requisites %}
+    <button type="submit" class="btn btn-save" style="margin-top:14px;">Сохранить реквизиты</button>
+    {% endif %}
+  </form>
+  <p style="margin-top:16px;">
+    <a href="{% url 'ui-bpm-field-rules' bpt_id=bpt.bpt_id pdt_id=pdt.pdt_id %}" class="btn btn-edit">Настроить источники полей (FieldSourceRule)</a>
+  </p>
+</div>
+{% endblock %}

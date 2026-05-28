@@ -1,0 +1,172 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<a class="back-link" href="{% url 'ui-bpm-process-template-detail' bpt_id=bpt.bpt_id %}">← К шагам шаблона</a>
+<h2>Источники значений полей</h2>
+<p class="text-muted">
+  Шаг <strong>{{ pdt.step_order }}. {{ pdt.name }}</strong> · тип документа «{{ pdt.document_type.name }}».
+  Настройте правило для каждого реквизита — ниже показано итоговое описание правила.
+</p>
+
+<form method="post" id="field-rules-form">{% csrf_token %}
+{% for row in rows %}
+  {% with req=row.req rule=row.rule %}
+  <div class="card rule-card" style="margin-bottom:14px;" data-initial-dict-field="{% if rule %}{{ rule.dictionary_field }}{% endif %}">
+    <div style="margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #eef0f4;">
+      <span class="badge badge-info">DOCX: {{ req.placeholder_key }}</span>
+      <span style="font-weight:600;">{{ req.name }}</span>
+    </div>
+    <p class="rule-summary-line" style="margin:0 0 14px 0;font-size:14px;color:#1e3a5f;">
+      {{ row.summary }}
+    </p>
+
+    <div class="form-grid-4">
+      <div>
+        <label>Источник значения</label>
+        <select name="rule_{{ req.requisite_id }}_source_type" class="rule-source" data-req="{{ req.requisite_id }}">
+          {% for val,lab in source_types %}
+            <option value="{{ val }}" {% if rule and rule.source_type == val %}selected{% elif not rule and val == 'manual' %}selected{% endif %}>{{ lab }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="src-block src-dictionary" data-req="{{ req.requisite_id }}" style="display:none;">
+        <label>Справочник</label>
+        <select name="rule_{{ req.requisite_id }}_dictionary_id" class="dict-select">
+          <option value="">— выберите —</option>
+          {% for d in dictionaries %}
+            <option value="{{ d.dictionary_id }}" {% if rule and rule.dictionary_id == d.dictionary_id %}selected{% endif %}>{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="src-block src-dictionary" data-req="{{ req.requisite_id }}" style="display:none;">
+        <label>Поле записи справочника</label>
+        <select name="rule_{{ req.requisite_id }}_dictionary_field" class="dict-field-select">
+          <option value="">— выберите колонку —</option>
+        </select>
+      </div>
+
+      <div class="src-block src-dictionary" data-req="{{ req.requisite_id }}" style="display:none;">
+        <label>Пример значения</label>
+        <input type="text" readonly class="readonly-input dict-sample" value="" />
+      </div>
+
+      <div class="src-block src-prev" data-req="{{ req.requisite_id }}" style="display:none;">
+        <label>Предыдущий шаг БП</label>
+        <select name="rule_{{ req.requisite_id }}_source_pdt_id" class="prev-pdt-select">
+          <option value="">—</option>
+          {% for os in other_steps %}
+            <option value="{{ os.pdt_id }}" {% if rule and rule.source_process_document_template_id == os.pdt_id %}selected{% endif %}>{{ os.step_order }}. {{ os.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="src-block src-prev" data-req="{{ req.requisite_id }}" style="display:none;">
+        <label>Реквизит документа этого шага</label>
+        <select name="rule_{{ req.requisite_id }}_source_req_id" class="prev-req-select"
+                data-initial-req="{% if rule %}{{ rule.source_requisite_id }}{% endif %}">
+          <option value="">—</option>
+        </select>
+      </div>
+
+    </div>
+  </div>
+  {% endwith %}
+{% endfor %}
+
+<button type="submit" class="btn btn-save" style="margin-top:8px;">Сохранить правила</button>
+</form>
+
+<script>
+(function() {
+  const dictKeys = {{ dict_keys_json|safe }};
+  const dictSamples = {{ dict_samples_json|safe }};
+  const pdtReqs = {{ pdt_requisites_json|safe }};
+
+  function fillReqOptions(select, pdtId, selectedId) {
+    select.innerHTML = '<option value="">—</option>';
+    const list = pdtReqs[String(pdtId)] || [];
+    list.forEach(function(item) {
+      const o = document.createElement('option');
+      o.value = item.id;
+      o.textContent = item.label;
+      if (String(selectedId) === String(item.id)) o.selected = true;
+      select.appendChild(o);
+    });
+  }
+
+  function fillDictFieldSelect(selectEl, dictId, selectedKey) {
+    if (!selectEl) return;
+    const items = dictKeys[String(dictId)] || [];
+    selectEl.innerHTML = '<option value=\"\">— выберите колонку —</option>';
+    items.forEach(function(item) {
+      const o = document.createElement('option');
+      o.value = item.key;
+      o.textContent = item.label + ' (' + item.key + ')';
+      if (selectedKey && String(selectedKey) === String(item.key)) o.selected = true;
+      selectEl.appendChild(o);
+    });
+  }
+
+  function updateSample(card, dictId, fieldKey) {
+    const sampleInput = card.querySelector('.dict-sample');
+    if (!sampleInput) return;
+    const payload = dictSamples[String(dictId)] || {};
+    sampleInput.value = (fieldKey && payload[fieldKey] !== undefined) ? String(payload[fieldKey]) : '';
+  }
+
+  function toggleBlocks(card, sourceType) {
+    card.querySelectorAll('.src-block').forEach(function(el) {
+      const rid = el.getAttribute('data-req');
+      let show = false;
+      if (sourceType === 'dictionary' && el.classList.contains('src-dictionary')) show = true;
+      if (sourceType === 'previous_document' && el.classList.contains('src-prev')) show = true;
+      el.style.display = show ? '' : 'none';
+    });
+  }
+
+  document.querySelectorAll('.rule-card').forEach(function(card) {
+    const reqId = card.querySelector('.rule-source').getAttribute('data-req');
+    const sourceSel = card.querySelector('.rule-source');
+    const dictSel = card.querySelector('.dict-select');
+    const fieldSel = card.querySelector('.dict-field-select');
+    const prevPdt = card.querySelector('.prev-pdt-select');
+    const prevReq = card.querySelector('.prev-req-select');
+
+    function onDictChange() {
+      const did = dictSel && dictSel.value;
+      fillDictFieldSelect(fieldSel, did, '');
+      updateSample(card, did, '');
+    }
+
+    if (prevPdt && prevReq) {
+      const initialReq = prevReq.getAttribute('data-initial-req');
+      fillReqOptions(prevReq, prevPdt.value, initialReq || '');
+      prevPdt.addEventListener('change', function() {
+        fillReqOptions(prevReq, prevPdt.value, '');
+      });
+    }
+
+    sourceSel.addEventListener('change', function() {
+      toggleBlocks(card, sourceSel.value);
+    });
+    if (dictSel) {
+      dictSel.addEventListener('change', onDictChange);
+    }
+    if (fieldSel) {
+      fieldSel.addEventListener('change', function() {
+        updateSample(card, dictSel && dictSel.value, fieldSel.value);
+      });
+    }
+
+    toggleBlocks(card, sourceSel.value);
+    const initialDictField = (card.getAttribute('data-initial-dict-field') || '').trim();
+    if (dictSel && dictSel.value) {
+      fillDictFieldSelect(fieldSel, dictSel.value, initialDictField);
+      updateSample(card, dictSel.value, fieldSel && fieldSel.value);
+    }
+    if (prevPdt && prevPdt.value) fillReqOptions(prevReq, prevPdt.value, prevReq.value);
+  });
+})();
+</script>
+{% endblock %}

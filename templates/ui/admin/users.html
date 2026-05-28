@@ -1,0 +1,18 @@
+{% extends "ui/base.html" %}
+{% load ui_labels %}
+{% block content %}
+<h2>Пользователи</h2>
+<table>
+  <thead><tr><th>ID</th><th>Логин</th><th>ФИО</th><th>Роль</th></tr></thead>
+  <tbody>
+  {% for u in users %}
+    <tr><td>{{ u.user_id }}</td><td>{{ u.login }}</td><td>{{ u.full_name }}</td><td>{{ u.role_id.role_name|role_ru }}</td></tr>
+  {% empty %}
+    <tr><td colspan="4">Пользователи отсутствуют</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+{% block page_help %}
+Раздел администратора для управления пользователями и контроля ролей в платформе.
+{% endblock %}

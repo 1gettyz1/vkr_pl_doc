@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <title>Вход</title>
+    <style>
+        body { font-family: "Segoe UI", sans-serif; background:#f3f4f6; }
+        .card { max-width:420px; margin:80px auto; background:#fff; padding:28px; border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.08); }
+        label { display:block; margin-bottom:4px; }
+        input, button { width:100%; box-sizing:border-box; padding:10px; margin:6px 0 12px 0; border:1px solid #d1d5db; border-radius:10px; }
+        button { background:#111827; color:#fff; }
+        .err { color:#dc2626; font-size:13px; margin-top:-8px; margin-bottom:10px; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>Вход в систему</h2>
+    <form method="post">{% csrf_token %}
+        <label>Логин</label><input name="login" />
+        {% if field_errors.login %}<div class="err">{{ field_errors.login }}</div>{% endif %}
+        <label>Пароль</label><input type="password" name="password" />
+        {% if field_errors.password %}<div class="err">{{ field_errors.password }}</div>{% endif %}
+        <button type="submit">Войти</button>
+    </form>
+    <a href="/register/">Регистрация</a>
+</div>
+</body>
+</html>

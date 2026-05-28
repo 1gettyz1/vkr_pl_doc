@@ -1,0 +1,18 @@
+{% extends "ui/base.html" %}
+{% load ui_labels %}
+{% block content %}
+<h2>Роли</h2>
+<table>
+  <thead><tr><th>ID</th><th>Роль</th><th>Описание</th></tr></thead>
+  <tbody>
+  {% for r in roles %}
+    <tr><td>{{ r.role_id }}</td><td>{{ r.role_name|role_ru }}</td><td>{{ r.description }}</td></tr>
+  {% empty %}
+    <tr><td colspan="3">Роли отсутствуют</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+{% block page_help %}
+Здесь администратор просматривает системные роли и их назначение.
+{% endblock %}

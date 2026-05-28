@@ -1,0 +1,24 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<a class="back-link" href="/ui/document-types/">← Назад</a>
+<h2>Загрузка DOCX-шаблона</h2>
+{% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+{% if warning %}<div class="alert alert-warn">{{ warning }}</div>{% endif %}
+<form method="post" enctype="multipart/form-data" class="card">{% csrf_token %}
+  <label>Название типа документа</label>
+  <input name="name" required />
+  <label>Описание</label>
+  <textarea name="description" rows="3"></textarea>
+  <label>DOCX файл</label>
+  <input type="file" name="template_file" accept=".doc,.docx" required />
+  <label style="display:flex;align-items:center;gap:8px;width:auto;margin-top:8px;">
+    <input type="checkbox" name="has_table_template" value="on" style="width:auto;margin:0;" />
+    В документе есть <strong>таблица</strong> (две подряд строки в DOCX с одинаковыми плейсхолдерами {% verbatim %}{{ ключ }}{% endverbatim %})
+  </label>
+  <p class="hint">Если отмечено, система ищет такую пару строк и создаёт по одному реквизиту на каждый уникальный ключ (без дублирования по строкам).</p>
+  <button type="submit" class="btn btn-save btn-pill" style="margin-top:8px;">Загрузить и извлечь поля</button>
+</form>
+{% endblock %}
+{% block page_help %}
+Загрузите Word-шаблон документа. Для корректной обработки рекомендуется DOCX с placeholders вида <code>&#123;&#123;field_name&#125;&#125;</code>.
+{% endblock %}

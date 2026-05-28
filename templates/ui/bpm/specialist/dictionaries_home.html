@@ -1,0 +1,46 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<a class="back-link" href="/">← На дашборд</a>
+<h2>Справочники</h2>
+<p class="text-muted">Структура: колонки → строки. Главное поле для оператора задаётся в карточке справочника.</p>
+
+<div style="margin-bottom:18px;">
+  {% if current_enterprise_user.role_id.role_name != "OPERATOR" %}
+  <a href="{% url 'ui-bpm-dictionary-create' %}" class="btn btn-save btn-pill">Создать справочник</a>
+  {% endif %}
+</div>
+
+<div class="card">
+  <table class="zebra">
+    <thead>
+      <tr>
+        <th>Название</th>
+        <th>Колонок</th>
+        <th>Записей</th>
+        <th style="min-width:280px;">Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for row in rows %}
+      <tr>
+        <td><strong>{{ row.dictionary.name }}</strong></td>
+        <td>{{ row.col_count }}</td>
+        <td>{{ row.rec_count }}</td>
+        <td>
+          <a href="{% url 'ui-bpm-dictionary-detail' dictionary_id=row.dictionary.dictionary_id %}" class="btn btn-edit btn-inline btn-pill">Открыть</a>
+          {% if current_enterprise_user.role_id.role_name != "OPERATOR" %}
+          <form method="post" style="display:inline;" onsubmit="return confirm('Удалить справочник «{{ row.dictionary.name }}»?');">{% csrf_token %}
+            <input type="hidden" name="action" value="delete_dict" />
+            <input type="hidden" name="dictionary_id" value="{{ row.dictionary.dictionary_id }}" />
+            <button type="submit" class="btn btn-delete btn-inline btn-pill">Удалить</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="4" class="text-muted">Справочников пока нет.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

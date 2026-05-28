@@ -1,0 +1,77 @@
+{# Ожидает: table_columns_json (JSON array), table_rows_json (строка JSON), hidden input name="table_rows_json" #}
+<div class="card" style="margin-bottom:18px;">
+  <h3 style="margin-top:0;">Таблица (динамические строки)</h3>
+  <p class="hint">Добавляйте строки и заполняйте поля. Ключи совпадают с колонками шаблона DOCX.</p>
+  <input type="hidden" name="table_rows_json" id="table_rows_json_field" value="{{ table_rows_json|default:'[]' }}" />
+  <div style="overflow:auto;">
+    <table class="zebra" id="dyn_table" style="min-width:480px;">
+      <thead id="dyn_table_head"></thead>
+      <tbody id="dyn_table_body"></tbody>
+    </table>
+  </div>
+  <button type="button" class="btn btn-save btn-pill" style="margin-top:10px;" id="btn_add_table_row">Добавить строку</button>
+</div>
+<script>
+(function(){
+  var cols = [];
+  try { cols = JSON.parse('{{ table_columns_json|escapejs }}'); } catch(e) { cols = []; }
+  if (!cols.length) return;
+  var head = document.getElementById('dyn_table_head');
+  var body = document.getElementById('dyn_table_body');
+  var hidden = document.getElementById('table_rows_json_field');
+  function syncHidden() {
+    var rows = [];
+    body.querySelectorAll('tr[data-row]').forEach(function(tr){
+      var idx = tr.getAttribute('data-row');
+      var obj = {};
+      cols.forEach(function(c){
+        var inp = tr.querySelector('[data-ph="' + c.placeholder_key + '"]');
+        obj[c.placeholder_key] = inp ? inp.value : '';
+      });
+      rows.push(obj);
+    });
+    hidden.value = JSON.stringify(rows);
+  }
+  function addRow(data) {
+    data = data || {};
+    var tr = document.createElement('tr');
+    tr.setAttribute('data-row', String(body.children.length));
+    cols.forEach(function(c){
+      var td = document.createElement('td');
+      var inp = document.createElement('input');
+      inp.type = 'text';
+      inp.setAttribute('data-ph', c.placeholder_key);
+      inp.value = data[c.placeholder_key] != null ? String(data[c.placeholder_key]) : '';
+      inp.placeholder = c.name;
+      inp.addEventListener('input', syncHidden);
+      td.appendChild(inp);
+      tr.appendChild(td);
+    });
+    var tdAct = document.createElement('td');
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-delete btn-inline btn-pill';
+    btn.textContent = 'Удалить';
+    btn.addEventListener('click', function(){ tr.remove(); syncHidden(); });
+    tdAct.appendChild(btn);
+    tr.appendChild(tdAct);
+    body.appendChild(tr);
+    syncHidden();
+  }
+  var hr = document.createElement('tr');
+  cols.forEach(function(c){
+    var th = document.createElement('th');
+    th.textContent = c.name + (c.is_required ? ' *' : '');
+    hr.appendChild(th);
+  });
+  var thx = document.createElement('th');
+  thx.textContent = '';
+  hr.appendChild(thx);
+  head.appendChild(hr);
+  var initial = [];
+  try { initial = JSON.parse(hidden.value || '[]'); } catch(e2) { initial = []; }
+  if (!initial.length) initial = [{}];
+  initial.forEach(function(row){ addRow(row); });
+  document.getElementById('btn_add_table_row').addEventListener('click', function(){ addRow({}); });
+})();
+</script>

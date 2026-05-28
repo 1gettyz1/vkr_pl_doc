@@ -1,0 +1,60 @@
+{% extends "ui/base.html" %}
+{% load ui_labels %}
+{% load document_extras %}
+{% block content %}
+<a class="back-link" href="/ui/documents/">← Назад</a>
+<h2>{{ document.document_type_id.name }}</h2>
+<p><b>Объект:</b> {{ document.object_id.name }}</p>
+<p><b>Процесс:</b> {{ document.process_id.name }}</p>
+<p><b>Автор:</b> {{ document.user_id.full_name }}</p>
+<p><b>Дата:</b> {{ document.created_at }}</p>
+<p><b>Статус:</b> <span class="status-pill status-{{ document.status }}">{{ document.status|status_ru }}</span></p>
+<hr />
+<div style="margin-bottom:12px;">
+  <b>Легенда:</b>
+  {% if bpm_document_preview %}
+  <span class="ph constant">Авто по БП</span>
+  <span class="ph variable">Ручной ввод в БП</span>
+  {% else %}
+  <span class="ph constant">Постоянный</span>
+  <span class="ph variable">Переменный</span>
+  {% endif %}
+</div>
+{% if document.generated_html %}
+<div style="background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:18px; margin-bottom:18px;">
+  {{ document.generated_html|safe }}
+</div>
+{% endif %}
+<h3>Реквизиты</h3>
+{% for row in requisite_rows %}
+  {% with item=row.rv %}
+  <p>
+    <b>{{ item.requisite_id.name }}:</b> {{ item.value }}
+    {% if row.effective_kind == "constant" %}
+      <span class="ph constant">{% if bpm_document_preview %}Авто{% else %}Постоянный{% endif %}</span>
+    {% else %}
+      <span class="ph variable">{% if bpm_document_preview %}Ручной ввод{% else %}Переменный{% endif %}</span>
+    {% endif %}
+  </p>
+  {% endwith %}
+{% endfor %}
+
+{% if table_preview_rows %}
+<h3>Строки таблицы (шаблон с таблицей)</h3>
+{% for row in table_preview_rows %}
+<div class="card" style="margin-bottom:10px;">
+  {% for k in row %}
+  <p style="margin:4px 0;"><b>{{ k }}:</b> {{ row|get_item:k }}</p>
+  {% endfor %}
+</div>
+{% endfor %}
+{% endif %}
+<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+  <a href="/ui/documents/{{ document.document_id }}/download/" class="btn btn-save btn-pill">Скачать DOCX</a>
+  <button type="button" class="btn btn-edit btn-pill" onclick="window.print()">Печать</button>
+  <a href="/ui/documents/" class="btn btn-back btn-pill">К списку документов</a>
+</div>
+{% endblock %}
+{% block page_help %}
+На странице предпросмотра можно проверить итоговый документ, скачать DOCX и отправить на печать.
+{% endblock %}

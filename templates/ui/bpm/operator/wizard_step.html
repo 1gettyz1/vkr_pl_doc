@@ -1,0 +1,115 @@
+{% extends "ui/base.html" %}
+{% block content %}
+<a class="back-link" href="{% url 'ui-bpm-operator-hub' %}">← К списку процессов</a>
+
+{% if inst.status == 'completed' %}
+<div class="alert alert-success" style="margin-bottom:16px;">
+  Экземпляр БП завершён. Скачайте все сформированные DOCX одним архивом:
+  <a href="{% url 'ui-bpm-instance-download-all' bpi_id=inst.bpi_id %}" class="btn btn-save btn-inline btn-pill" style="margin-left:8px;">Скачать все DOCX</a>
+</div>
+{% endif %}
+
+<div class="cards-row" style="margin-bottom:18px;">
+  <div class="card hover">
+    <div class="text-muted" style="font-size:12px;">Название экземпляра</div>
+    <div style="font-weight:600;">{{ inst.instance_name|default:"—" }}</div>
+  </div>
+  <div class="card hover">
+    <div class="text-muted" style="font-size:12px;">Бизнес-процесс</div>
+    <div style="font-weight:700;font-size:17px;">{{ inst.business_process_template.name }}</div>
+  </div>
+  <div class="card hover">
+    <div class="text-muted" style="font-size:12px;">Объект</div>
+    <div>{{ inst.production_object.object_type }} — {{ inst.production_object.name }}</div>
+  </div>
+  <div class="card hover">
+    <div class="text-muted" style="font-size:12px;">Справочник</div>
+    <div>{{ dict_record_label }}</div>
+  </div>
+  <div class="card hover">
+    <div class="text-muted" style="font-size:12px;">Статус экземпляра</div>
+    <div>
+      {% if inst.status == 'completed' %}
+        <span class="badge badge-completed">завершён</span>
+      {% elif inst.status == 'in_progress' %}
+        <span class="badge badge-in_progress">в работе</span>
+      {% else %}
+        <span class="badge badge-draft">{{ inst.status }}</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<h2>Шаг {{ step_index }} из {{ total_steps }}: {{ pdt.name }}</h2>
+
+<div class="card" style="margin-bottom:18px;padding:12px 16px;">
+  <div class="text-muted" style="font-size:12px;margin-bottom:8px;">Прогресс</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    {% for s in steps %}
+      <span class="status-pill {% if s.step_order == step_index %}status-filled{% elif s.step_order < step_index %}status-generated{% else %}status-draft{% endif %}">
+        {{ s.step_order }}. {{ s.name }}
+      </span>
+    {% endfor %}
+  </div>
+</div>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+{% for w in warnings %}
+<div class="alert alert-warn">{{ w }}</div>
+{% endfor %}
+
+<form method="post">{% csrf_token %}
+{% if has_table and table_columns_json != "[]" %}
+{% include "ui/fragments/table_rows_widget.html" %}
+{% endif %}
+  {% for f in fields %}
+  {% if not f.table_column %}
+  <div class="field-row {% if f.field_kind == 'constant' %}field-constant{% else %}field-variable{% endif %}">
+    <label>
+      <strong>{{ f.name }}</strong>
+      {% if f.is_required %}<span class="text-muted">*</span>{% endif %}
+      {% if f.source == 'auto' %}
+        {% if f.ui_mode == 'auto_prev' %}
+          <span class="badge badge-info">из предыдущего документа</span>
+        {% else %}
+          <span class="badge badge-info">авто</span>
+        {% endif %}
+      {% endif %}
+    </label>
+    {% if f.readonly %}
+      <input type="text" name="req_{{ f.requisite_id }}" value="{{ f.value }}" readonly class="readonly-input" />
+    {% else %}
+      <input type="text" name="req_{{ f.requisite_id }}" value="{{ f.value }}" />
+    {% endif %}
+    {% if f.ui_hint_ru %}
+      <div class="hint">{{ f.ui_hint_ru }}</div>
+    {% elif f.source_document %}
+      <div class="hint">{{ f.source_document }}</div>
+    {% endif %}
+  </div>
+  {% endif %}
+  {% endfor %}
+
+  <div style="display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;align-items:center;">
+    {% if step_index > 1 %}
+    <button type="submit" name="wizard_action" value="prev" class="btn btn-back btn-pill">Назад</button>
+    {% endif %}
+    <button type="submit" name="wizard_action" value="save" class="btn btn-save btn-pill">Сохранить</button>
+    <button type="submit" name="wizard_action" value="generate" class="btn btn-edit btn-pill">Пересформировать DOCX</button>
+    {% if step_index < total_steps %}
+    <button type="submit" name="wizard_action" value="next" class="btn btn-save btn-pill">Далее</button>
+    {% else %}
+    <button type="submit" name="wizard_action" value="next" class="btn btn-save btn-pill">Завершить и сформировать DOCX</button>
+    {% endif %}
+  </div>
+</form>
+
+<div class="card" style="margin-top:22px;">
+  <strong>Предпросмотр и файл</strong>
+  <p class="text-muted" style="margin:8px 0 12px 0;">После сохранения значений можно открыть HTML-предпросмотр или скачать DOCX.</p>
+  <a href="/ui/documents/{{ document.document_id }}/preview/" class="btn btn-save btn-inline btn-pill">Предпросмотр</a>
+  <a href="/ui/documents/{{ document.document_id }}/download/" class="btn btn-edit btn-inline btn-pill">Скачать DOCX</a>
+</div>
+{% endblock %}
