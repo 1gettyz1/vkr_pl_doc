@@ -174,6 +174,3 @@ python manage.py reset_platform
 - Изменение источников правил — модель `FieldSourceRule`, `apps.bpm.services.resolve_fields_for_step`.
 - Сиды демо — `apps.users.management.commands.seed_demo`.
 
-## Лицензия и авторство
-
-Укажите по месту требований ВКР / организации.
